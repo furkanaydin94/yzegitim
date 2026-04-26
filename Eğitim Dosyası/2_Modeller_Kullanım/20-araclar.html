@@ -1,0 +1,571 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>20 · Yapay Zeka Modelleri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter2-theme.css">
+<style>
+:root { --accent: #3B82F6; --accent-soft: #EFF6FF; }
+
+/* Tool list buttons */
+.tool-list { display: flex; flex-direction: column; gap: 8px; }
+.tool-btn {
+  width: 100%;
+  border: 1.5px solid var(--line-soft);
+  background: var(--paper);
+  color: var(--muted);
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.tool-btn:hover { border-color: var(--ink); color: var(--ink); }
+.tool-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-left-width: 4px;
+  color: var(--ink);
+}
+.tool-icon {
+  width: 34px; height: 34px;
+  border: 1.5px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); font-size: 16px; flex-shrink: 0;
+}
+.tool-btn.active .tool-icon { border-color: var(--accent); background: var(--accent-soft); }
+.tool-name {
+  display: block;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px; font-weight: 800; color: var(--ink);
+}
+.tool-note { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.tool-count {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  color: var(--muted-2); border: 1.5px solid var(--line-soft);
+  padding: 2px 6px; white-space: nowrap;
+}
+
+/* Right panel override */
+.right {
+  padding: 0;
+  background: var(--bg);
+  overflow: hidden;
+}
+#rightInner { width: 100%; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+
+.tool-view { height: 100%; display: none; flex-direction: column; gap: 0; }
+.tool-view.active { display: flex; }
+
+/* View header */
+.view-head {
+  display: grid; grid-template-columns: 1fr auto; gap: 16px;
+  align-items: center;
+  padding: 28px 28px 22px 28px;
+  min-height: 116px;
+  border-bottom: 1.5px solid var(--ink);
+  background: var(--paper);
+  flex-shrink: 0;
+}
+.view-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 28px; font-weight: 900; letter-spacing: -0.03em; color: var(--ink);
+  text-transform: uppercase;
+}
+.view-title span { color: var(--accent); }
+.view-desc { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; margin-top: 2px; }
+.view-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tiny-link {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  text-decoration: none;
+  line-height: 1;
+  transition: all 0.15s;
+}
+.tiny-link:hover { background: var(--ink); color: var(--paper); }
+.visit-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s; text-decoration: none;
+}
+.visit-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+.demo-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 20px 24px;
+  scrollbar-width: thin; scrollbar-color: var(--line-soft) transparent;
+  background:
+    linear-gradient(var(--line-soft-2) 1px, transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg, var(--line-soft-2) 1px, transparent 1px) 0 0/44px 44px,
+    var(--bg);
+}
+.demo-scroll::-webkit-scrollbar { width: 4px; }
+.demo-scroll::-webkit-scrollbar-thumb { background: var(--line-soft); }
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+.demo-card {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+  transition: box-shadow 0.15s;
+}
+.demo-card::before {
+  content: ""; position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--card-accent, var(--accent));
+}
+.demo-card:hover { box-shadow: 4px 4px 0 var(--ink); }
+.demo-top { display: flex; align-items: flex-start; gap: 12px; }
+.demo-ico {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); border: 1.5px solid var(--line-soft);
+  color: var(--card-accent, var(--accent)); font-size: 14px;
+}
+.demo-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2;
+}
+.demo-tag {
+  display: inline-block; margin-top: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--line-soft);
+  color: var(--muted-2);
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.demo-desc { color: var(--ink-2); font-size: 12.5px; line-height: 1.6; }
+.demo-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: auto; }
+
+.mini-note {
+  display: inline-flex; align-items: center;
+  padding: 6px 10px; border: 1.5px dashed var(--line-soft);
+  color: var(--muted); font-size: 11px; font-weight: 500;
+}
+.mini-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--ink); background: var(--paper);
+  color: var(--ink); font-size: 11px; font-weight: 700;
+  font-family: 'Inter Tight', sans-serif; cursor: pointer;
+  transition: all 0.12s;
+}
+.mini-btn:hover { background: var(--ink); color: var(--paper); }
+.mini-btn.primary {
+  background: var(--card-accent, var(--accent));
+  border-color: var(--card-accent, var(--accent));
+  color: var(--paper);
+}
+.mini-btn.primary:hover { opacity: 0.85; }
+
+/* Toast */
+.toast {
+  position: fixed; right: 24px; bottom: 24px;
+  transform: translateY(24px);
+  z-index: 500;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border: 1.5px solid var(--ink); background: var(--paper);
+  color: var(--ink); font-size: 12.5px; font-weight: 700;
+  font-family: 'Inter Tight', sans-serif;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 4px 4px 0 var(--ink);
+  opacity: 0;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; }
+</style>
+</head>
+<body>
+
+<!-- TOP TIMELINE -->
+<nav class="htl" id="htl">
+  <div class="htl-label">Bölüm 2<b>YZ Modelleri</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">7</b> / 7</div>
+</nav>
+
+<div class="slide">
+  <!-- LEFT -->
+  <aside class="left fadeUp" id="leftPanel">
+    <div>
+      <div class="eyebrow d1">
+        <span class="num">20</span>
+        <span>Bölüm 2 · Yapay Zeka Modelleri</span>
+      </div>
+      <h1 class="d2" style="margin-top:20px;">Yapay Zeka<br><span class="hl">Modelleri</span>.</h1>
+    </div>
+
+    <p class="lede d3">
+      Kurulum gerektirmeyen, herkesin tarayıcıdan açabileceği araçlar. Her demo için hazır prompt.
+    </p>
+
+    <div class="tool-list d4" style="animation-delay:.18s;" aria-label="Araç seçimi">
+      <button class="tool-btn active" id="tool-chatgpt" style="--tc:#10a37f;" onclick="showTool('chatgpt')">
+        <span class="tool-icon">💬</span>
+        <span>
+          <span class="tool-name">ChatGPT</span>
+          <span class="tool-note">Ajan, uygulama bağlantısı ve görsel üretimi</span>
+        </span>
+        <span class="tool-count">3 demo</span>
+      </button>
+      <button class="tool-btn" id="tool-claude" style="--tc:#d97706;" onclick="showTool('claude')">
+        <span class="tool-icon">🧠</span>
+        <span>
+          <span class="tool-name">Claude</span>
+          <span class="tool-note">Dosya, skill, connector ve Chrome iş akışları</span>
+        </span>
+        <span class="tool-count">9 demo</span>
+      </button>
+      <button class="tool-btn" id="tool-notebooklm" style="--tc:#8b5cf6;" onclick="showTool('notebooklm')">
+        <span class="tool-icon">📖</span>
+        <span>
+          <span class="tool-name">NotebookLM</span>
+          <span class="tool-note">Kaynak belgeye dayalı rapor analizi</span>
+        </span>
+        <span class="tool-count">1 demo</span>
+      </button>
+    </div>
+
+    <div class="foot d5" style="animation-delay:.28s;">
+      <div class="nav">
+        <a href="22-ekip-arkadasi.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Geri
+        </a>
+        <a href="../3_Teknik_Kullan%C4%B1m/23-bolum3-kapak.html" class="primary">
+          Bölüm 3
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+      <span class="pageno">20 / 22</span>
+    </div>
+  </aside>
+
+  <!-- DIVIDER -->
+  <div class="divider" id="divider"></div>
+
+  <!-- RIGHT -->
+  <main class="right" id="rightPanel">
+    <div id="rightInner">
+
+      <!-- ChatGPT -->
+      <section class="tool-view active" id="view-chatgpt" style="--accent:#10a37f;">
+        <div class="view-head">
+          <div>
+            <div class="view-title">ChatGPT</div>
+            <div class="view-desc">OpenAI · chatgpt.com</div>
+          </div>
+          <a class="visit-btn" href="https://chatgpt.com" target="_blank" rel="noopener">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            chatgpt.com
+          </a>
+        </div>
+        <div class="demo-scroll">
+          <div class="demo-grid">
+            <article class="demo-card" style="--card-accent:#10a37f;">
+              <div class="demo-top">
+                <span class="demo-ico">🗺️</span>
+                <div><h3 class="demo-title">Otonom Ajan Modu</h3><span class="demo-tag">araştırma + karar kartı</span></div>
+              </div>
+              <p class="demo-desc">25 yönetici adayı için online liderlik eğitim platformlarını tarar, fiyat ve içerik bilgilerini kıyaslar, 1 sayfalık öneri kartı çıkarır.</p>
+              <div class="demo-actions">
+                <button class="mini-btn primary" onclick="openChat('chatgpt','agent')">↗ Sohbeti Aç</button>
+                <button class="mini-btn" onclick="copyPrompt('chatgpt','agent')">⧉ Promptu Kopyala</button>
+              </div>
+            </article>
+            <article class="demo-card" style="--card-accent:#38bdf8;">
+              <div class="demo-top">
+                <span class="demo-ico">🔌</span>
+                <div><h3 class="demo-title">Uygulamalar Bağlama</h3><span class="demo-tag">ayarlar demosu</span></div>
+              </div>
+              <p class="demo-desc">ChatGPT'nin ayarlarındaki uygulama bağlantıları gösterilir. "Asistan artık sadece cevap veren kutu değil" fikri verilir.</p>
+              <div class="demo-actions"><span class="mini-note">Canlı gösterim · kopyalanacak prompt yok</span></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#22c55e;">
+              <div class="demo-top">
+                <span class="demo-ico">✨</span>
+                <div><h3 class="demo-title">Görsel Üretimi</h3><span class="demo-tag">süreç infografiği</span></div>
+              </div>
+              <p class="demo-desc">İSPER çalışan performans yönetimi döngüsünü tek görselde anlatan, sade ve kurumsal bir süreç şeması üretir.</p>
+              <div class="demo-actions">
+                <button class="mini-btn primary" onclick="openChat('chatgpt','image')">↗ Sohbeti Aç</button>
+                <button class="mini-btn" onclick="copyPrompt('chatgpt','image')">⧉ Promptu Kopyala</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Claude -->
+      <section class="tool-view" id="view-claude" style="--accent:#d97706;">
+        <div class="view-head">
+          <div>
+            <div class="view-title">Claude</div>
+            <div class="view-desc">Anthropic · claude.ai</div>
+          </div>
+          <div class="view-actions">
+            <a class="tiny-link" href="https://youtu.be/rBJnWMD0Pho?si=RIU2Rd0cLGWwE-ZG" target="_blank" rel="noopener" title="YouTube videosu" aria-label="YouTube videosu">YT</a>
+            <a class="tiny-link" href="https://x.com/claudeai/status/2036195789601374705?s=20" target="_blank" rel="noopener" title="Claude X paylaşımı" aria-label="Claude X paylaşımı">X</a>
+            <a class="visit-btn" href="https://claude.ai" target="_blank" rel="noopener">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              claude.ai
+            </a>
+          </div>
+        </div>
+        <div class="demo-scroll">
+          <div class="demo-grid">
+            <article class="demo-card" style="--card-accent:#d97706;">
+              <div class="demo-top"><span class="demo-ico">📊</span><div><h3 class="demo-title">Excel Oluşturma</h3><span class="demo-tag">yorumlu tablo</span></div></div>
+              <p class="demo-desc">2025 Q2 eğitim takip tablosunu koşullu biçimlendirme ve yönetici analiziyle Excel mantığında üretir.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('claude','excel')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('claude','excel')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#14b8a6;">
+              <div class="demo-top"><span class="demo-ico">🗄️</span><div><h3 class="demo-title">Excel Veri Üretimi</h3><span class="demo-tag">Adım 1 · Claude</span></div></div>
+              <p class="demo-desc">Claude 100 satırlık gerçekçi İSPER çalışan performans verisi oluşturur ve dosyayı indirilebilir .xlsx olarak verir.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('claude','excelData')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('claude','excelData')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#22c55e;">
+              <div class="demo-top"><span class="demo-ico">📈</span><div><h3 class="demo-title">Excel'de Aç ve Claude'da Analiz Et</h3><span class="demo-tag">Adım 2 · gerçek dosya + yönetici raporu</span></div></div>
+              <p class="demo-desc">İndirilen dosya Excel'de açılır, ardından Claude'a yüklenir. Claude aynı veri setinden İK direktörü için kısa yönetici raporu çıkarır.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="copyPrompt('claude','excelReport')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#f59e0b;">
+              <div class="demo-top"><span class="demo-ico">🧰</span><div><h3 class="demo-title">Sunum Skili</h3><span class="demo-tag">skill creator</span></div></div>
+              <p class="demo-desc">İSPER marka kurallarını ve boş PowerPoint şablonunu tekrar kullanılabilir bir Claude skill paketine dönüştürür.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="copyPrompt('claude','presentationSkill')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#fb923c;">
+              <div class="demo-top"><span class="demo-ico">📑</span><div><h3 class="demo-title">PowerPoint Oluşturma</h3><span class="demo-tag">skill kullanımı</span></div></div>
+              <p class="demo-desc">Yeni kurulan İSPER Sunum Skili ile 2026 Q1 Eğitim ve Gelişim değerlendirme sunumu üretilir.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('claude','powerpoint')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('claude','powerpoint')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#84cc16;">
+              <div class="demo-top"><span class="demo-ico">📉</span><div><h3 class="demo-title">KPI Oluşturma Skili</h3><span class="demo-tag">tekrarlı kurumsal iş</span></div></div>
+              <p class="demo-desc">Hazır kpi-builder klasörü Claude'a verilerek İSPER için KPI üretim kuralları skill haline getirilir.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('claude','kpi')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('claude','kpi')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#06b6d4;">
+              <div class="demo-top"><span class="demo-ico">🔗</span><div><h3 class="demo-title">Connector</h3><span class="demo-tag">bağlantı kurulumu</span></div></div>
+              <p class="demo-desc">Claude ayarlarında Figma ve Google Takvim bağlantıları kurulur; sonraki iki demo için zemin hazırlanır.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="copyPrompt('claude','connector')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#a855f7;">
+              <div class="demo-top"><span class="demo-ico">🎨</span><div><h3 class="demo-title">Figma</h3><span class="demo-tag">vektör süreç şeması</span></div></div>
+              <p class="demo-desc">Performans yönetimi sürecini Figma'da düzenlenebilir bir iş akış şeması olarak çizer.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('claude','figma')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('claude','figma')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#3b82f6;">
+              <div class="demo-top"><span class="demo-ico">📅</span><div><h3 class="demo-title">Google Takvim</h3><span class="demo-tag">gerçek işlem</span></div></div>
+              <p class="demo-desc">Bugünün İSPER ajandasına üç etkinlik ekler; saat, yer, not ve hatırlatmaları birlikte kurar.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('claude','calendar')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('claude','calendar')">⧉ Promptu Kopyala</button></div>
+            </article>
+            <article class="demo-card" style="--card-accent:#ef4444;">
+              <div class="demo-top"><span class="demo-ico">🌐</span><div><h3 class="demo-title">Chrome'da Kullanım</h3><span class="demo-tag">EKAP araştırması</span></div></div>
+              <p class="demo-desc">Claude, Chrome'da EKAP üzerinden 2025-2026 yapay zeka ihalelerini tarar ve İSPER için pazar analizi çıkarır.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openResource('usageSheet')">↗ Kullanıma Çıkış Tablosu</button><button class="mini-btn" onclick="copyPrompt('claude','ekap')">⧉ Promptu Kopyala</button></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- NotebookLM -->
+      <section class="tool-view" id="view-notebooklm" style="--accent:#8b5cf6;">
+        <div class="view-head">
+          <div>
+            <div class="view-title">NotebookLM</div>
+            <div class="view-desc">Google · notebooklm.google.com</div>
+          </div>
+          <a class="visit-btn" href="https://notebooklm.google.com" target="_blank" rel="noopener">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            notebooklm.google.com
+          </a>
+        </div>
+        <div class="demo-scroll">
+          <div class="demo-grid">
+            <article class="demo-card" style="--card-accent:#8b5cf6;">
+              <div class="demo-top"><span class="demo-ico">⚖️</span><div><h3 class="demo-title">Sayıştay Raporu Analizi</h3><span class="demo-tag">kaynaklı soru-cevap</span></div></div>
+              <p class="demo-desc">Yüklenen denetim raporundan kapsam, kritik bulgular, hukuki/mali riskler, yönetim önerileri ve bu haftanın aksiyonları çıkarılır.</p>
+              <div class="demo-actions"><button class="mini-btn primary" onclick="openChat('notebooklm','audit')">↗ Sohbeti Aç</button><button class="mini-btn" onclick="copyPrompt('notebooklm','audit')">⧉ Promptu Kopyala</button></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"><span class="toast-dot"></span><span id="toast-msg"></span></div>
+
+<script>
+const TOOLS = ['chatgpt','claude','notebooklm'];
+let currentTool = 'chatgpt';
+
+const PROMPTS = {
+  chatgpt: {
+    url: 'https://chatgpt.com',
+    promptUrl: 'https://chatgpt.com/?q=',
+    prompts: {
+      agent: `GÖREV: 25 yönetici adayımız için online liderlik gelişim programı seçeneklerini kıyasla ve kurumsal toplu satın alma kararı için 1 sayfalık öneri kartı çıkar.\n\nKONU: İSPER 2026 Q2 Liderlik Gelişim Programı — 25 yönetici adayı, hibrit eğitim modeli planlanıyor.\n\nYAPMAN GEREKEN ADIMLAR:\n— En az 5 farklı online eğitim platformunu tara (Coursera, Udemy Business, LinkedIn Learning, Skillshare, edX)\n— Her platformda "leadership / yönetim becerileri" kategorisindeki en yüksek puanlı kursu bul\n— Her seçenek için: Program adı, Süre, Türkçe altyazı, Bireysel fiyat, Kurumsal/toplu fiyat, Kullanıcı puanı, Sertifika\n— "içerik kalitesi / Türkçe uygunluk / 25 kişi için toplam maliyet" üçlüsünde kıyasla\n\nÇIKTI: 1 sayfalık karar kartı + 3 seçeneklik kıyas tablosu + kurumsal satış e-posta taslakları`,
+      apps: `SUNUM DEMO NOTU: ChatGPT ayarlarında "Uygulamalar" veya bağlantılar bölümünü aç.\n\nANLATIM:\n— "ChatGPT'ye bir uygulamaya erişim verdiğinizde, artık sadece cevap üretmez; izin verdiğiniz alanda dosya, e-posta, takvim veya çalışma alanı bağlamını kullanabilir."\n— Yetki ekranını gösterirken kapsamı vurgula: "Neye izin verdiğimizi net seçiyoruz."\n\nÇIKTI: Kısa, ayarlar üzerinden canlı gösterim`,
+      image: `GÖREV: Basit ve temiz bir iş akışı görseli üret.\n\nKONU: İSPER çalışan performans yönetimi döngüsü\n\nTASARIM: Modern kurumsal süreç infografiği, logo kullanma, 4 evre ayrı blok halinde\n\nEVRE 1 — Hedef Belirleme\nEVRE 2 — Ara Değerlendirme\nEVRE 3 — 360 Geri Bildirim\nEVRE 4 — Yıl Sonu ve Kariyer Planı\n\nÇIKTI: Tek görselde sade iş akışı, kurumsal renklerde`
+    }
+  },
+  claude: {
+    url: 'https://claude.ai',
+    promptUrl: 'https://claude.ai/new?q=',
+    prompts: {
+      excel: `GÖREV: 2025 Q2 dönemi için İBB Akademi eğitim takip tablosunu Excel formatında oluştur ve altına 3 satırlık yönetici analizi ekle.\n\nTABLO YAPISI — 9 SÜTUN: Program Adı | Hedef Grup | Planlanan Kişi | Gerçekleşen Kişi | Tamamlanma % | Memnuniyet | Durum | Sorumlu Birim | Sonraki Adım\n\nPROGRAMLAR: Liderlik Gelişim, İSG Temel Eğitimi, Yeni Çalışan Oryantasyonu, Dijital Araçlar, UN WEPs Farkındalık, Koçluk, MYK Eğitmen Sertifikası\n\nÇIKTI: Doğrudan indirilebilir Excel (.xlsx), koşullu biçimlendirme: %60 altı kırmızı, %60-80 sarı, %80+ yeşil`,
+      excelData: `GÖREV: İSPER insan kaynakları veri tabanı için 100 satırlık gerçekçi çalışan performans verisi oluştur ve doğrudan indirilebilir Excel dosyası olarak sun.\n\nSÜTUNLAR: Çalışan ID | Ad Soyad | Birim | Pozisyon | Kıdem (yıl) | 2025 Performans Skoru | Eğitim Tamamlama % | Devamsızlık (gün) | 360 Geri Bildirim Skoru | Kariyer Hedefi | Son Terfi Yılı\n\nÇIKTI: Doğrudan indirilebilir .xlsx dosyası, başlık satırı koyu, ilk satır dondurulmuş`,
+      excelReport: `GÖREV: Yüklediğim İSPER çalışan veri setini analiz et ve İK direktörüne sunulmak üzere yönetici raporu hazırla.\n\nANALİZ SORULARI:\n— Birim bazlı performans karşılaştırması\n— Eğitim-performans ilişkisi\n— Sessiz çalışanlar (yüksek performans + kariyer hedefi "Yok")\n— Terfi sıkışıklığı (5 yıl+ kıdem, hiç terfi yok)\n— Devamsızlık aykırı değerleri\n\nÇIKTI: Yönetici özeti (5 cümle) + bulgular + Q1 2026 aksiyon tablosu`,
+      presentationSkill: `GÖREV: Yüklediğim PowerPoint şablonunu kullanarak "İSPER Sunum Skili" adında yeniden kullanılabilir bir Claude skill paketi oluştur.\n\nSKILL ADI: ISPER-Sunum\n\nMARKA KURALLARI:\n— Üst kırmızı şerit: #E2231A\n— Font: Calibri\n— Başlıklar büyük harf\n— Slayt numarası sağ altta\n\nSLAYT YAPISI: Kapak | Bölüm ayracı | İçerik | Kapanış\n\nÇIKTI: Çalışır durumda Claude Skill paketi — tek cümlelik istekle tam markalı .pptx üretsin`,
+      powerpoint: `İSPER Sunum Skili'ni kullanarak "2026 Q1 İSPER Eğitim ve Gelişim Yarıyıl Değerlendirme" sunumunu hazırla.\n\nİÇERİK: Kapak | Yönetici özeti | Tamamlanan Programlar (3 slayt) | Risk Altındaki Programlar | Q2 Yol Haritası | Kapanış\n\nDosyayı kaydet: ISPER_2026Q1_Yariyil_Degerlendirme.pptx`,
+      kpi: `GÖREV: Yüklediğim kpi-builder klasörünü incele ve İSPER için yeniden kullanılabilir bir KPI Oluşturma Skili haline getir.\n\nKURALLAR: Outcome, driver ve risk KPI ayrımını koru. Vanity metrikleri reddeden yaklaşımı koru. Her KPI için formül, sahip, ölçüm sıklığı, hedef/eşik ve yorum alanı üret.\n\nTEST: Skill'i oluşturduktan sonra "Liderlik Gelişim Programı için KPI seti üret" isteğiyle test çalıştır.`,
+      connector: `SUNUM DEMO NOTU: Claude ayarlarında Connector / Connections menüsünü aç.\n\nGÖSTERİLECEK ADIMLAR:\n— Figma bağlantısını kur\n— Google Takvim bağlantısını kur\n— Yetki ekranında neye izin verildiğini kısa anlat\n\nANLATIM: Connector, Claude'un dış uygulamaları uzak el gibi kullanmasını sağlar.`,
+      figma: `GÖREV: Figma'da çalışan performans yönetimi sürecini anlatan sade bir iş akış şeması hazırla.\n\n4 AŞAMA:\n1. Hedef belirleme\n2. Ara değerlendirme\n3. 360 geri bildirim\n4. Yıl sonu değerlendirmesi ve kariyer planı\n\nÖZELLİKLER: Oklar ve geri dönüşler net olsun. Teknik dil kullanma.\n\nÇIKTI: Doğrudan Figma'da hazırlanmış sade iş akış şeması`,
+      calendar: `GÖREV: Google Takvim bağlantını kullanarak bugün için aşağıdaki 3 etkinliği takvimime ekle.\n\n1. OSO Haftalık Operasyon Toplantısı — Bugün 09:00-09:45 — Toplantı Odası B\n2. BİO Aylık Koordinasyon — Bugün 13:00-14:30 — Online Google Meet\n3. Liderlik Programı Tasarım Atölyesi — Bugün 15:30-17:00 — İBB Akademi Fatih\n\nKOŞULLAR: Her etkinliğe 10 dk önce bildirim, renk: mavi, takvim: İş`,
+      ekap: `GÖREV: EKAP üzerinden 2025-2026 yıllarında yayımlanmış yapay zeka alanındaki kamu ihalelerini tara ve İSPER yönetimi için pazar analizi çıkar.\n\nANAHTAR KELİMELER: yapay zeka, makine öğrenmesi, veri analitiği, karar destek sistemi, görüntü işleme\n\nÇIKTI:\n1. Tablo: No | Başlık | Yıl | İdare | Kapsam | İhale Türü | İçerik Özeti | EKAP Linki\n2. Yönetici analizi: öne çıkan kullanım alanları, İSPER için fırsatlar`
+    }
+  },
+  notebooklm: {
+    url: 'https://notebooklm.google.com',
+    promptUrl: null,
+    prompts: {
+      audit: `GÖREV: Bu Sayıştay denetim raporunu analiz et ve şu sorulara yanıt ver.\n\n1. Denetimin kapsamı — hangi kurum, hangi dönem?\n2. Temel bulgular — en kritik 5 bulguyu önem sırasına göre listele.\n3. Hukuki ve mali riskler — yasal uyumsuzluklar ve parasal etkiler.\n4. Yönetim önerileri — Sayıştay'ın düzeltici önlemleri.\n5. Öncelikli aksiyon — bu raporu alan kurumun üst yöneticisi olsaydım bu hafta ne yapardım? 3 somut adım.\n\nDil: Teknik muhasebe dili yerine yönetici dili kullan.`
+    }
+  }
+};
+
+const CHAT_LINKS = {
+  chatgpt: {
+    agent: 'https://chatgpt.com/share/69ee2fbd-6c50-83eb-ac8a-a8c430dc1133',
+    image: 'https://chatgpt.com/share/69ee166d-6138-83eb-98f9-0d2861da19c5'
+  },
+  claude: {
+    excel: 'https://claude.ai/share/918f1c81-3179-426b-a6ba-7b958e57eca0',
+    excelData: 'https://claude.ai/share/d8388927-fc3b-4bde-bf90-076f2aaa90f1',
+    powerpoint: 'https://claude.ai/share/73b148d5-852f-4aa4-b864-08592a6dd9bf',
+    kpi: 'https://claude.ai/share/ce45058a-f5ae-4dc6-87b3-1ded03860ed7',
+    figma: 'https://claude.ai/share/4423b17a-c152-45aa-8b89-80a08f7f0a45',
+    calendar: 'https://claude.ai/share/6a83d0dc-0156-4ef9-ac6d-8ee427618adb'
+  },
+  notebooklm: {
+    audit: 'https://notebooklm.google.com/notebook/a2626cb3-267a-47bd-bf10-029dcd0804f0'
+  }
+};
+
+const RESOURCE_LINKS = {
+  usageSheet: 'https://docs.google.com/spreadsheets/d/1mfl8gvrg9mwiErVNe9aDk4WzIfUa7Nh-KZPMsdyMx_w/edit?usp=sharing'
+};
+
+function showTool(id){
+  TOOLS.forEach(tool=>{
+    document.getElementById('tool-'+tool).classList.toggle('active', tool===id);
+    document.getElementById('view-'+tool).classList.toggle('active', tool===id);
+  });
+  currentTool = id;
+}
+
+let toastTimer;
+function showToast(msg){
+  const toast=document.getElementById('toast'), msgEl=document.getElementById('toast-msg');
+  if(!toast||!msgEl) return;
+  msgEl.textContent=msg; toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toast.classList.remove('show'),3200);
+}
+
+function getPrompt(tool,key){ return PROMPTS[tool]&&PROMPTS[tool].prompts?PROMPTS[tool].prompts[key]:''; }
+
+async function copyText(text){
+  if(!text) return false;
+  if(navigator.clipboard&&window.isSecureContext){ await navigator.clipboard.writeText(text); return true; }
+  const ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('readonly','');
+  ta.style.position='fixed'; ta.style.top='-999px'; document.body.appendChild(ta);
+  ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); return ok;
+}
+
+async function copyPrompt(tool,key){ await copyText(getPrompt(tool,key)); showToast('Prompt kopyalandı'); }
+function openChat(tool,key){
+  const link = CHAT_LINKS[tool] && CHAT_LINKS[tool][key];
+  if(!link) return;
+  window.open(link,'_blank','noopener');
+  showToast('Sohbet açıldı');
+}
+function openResource(key){
+  const link = RESOURCE_LINKS[key];
+  if(!link) return;
+  window.open(link,'_blank','noopener');
+  showToast('Tablo açıldı');
+}
+
+// TIMELINE
+const SLIDES=[
+  {file:'../1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html', year:'B1', label:'Bölüm 1', cover:true},
+  {file:'16-bolum2-kapak.html', year:'B2', label:'Kap.', cover:true},
+  {file:'17-model-haritasi.html', year:'Hrt', label:'Harita'},
+  {file:'18-leaderboard.html', year:'Sır', label:'Sıralama'},
+  {file:'21-bagiam-prompt.html', year:'Prmt', label:'Prompt'},
+  {file:'22-ekip-arkadasi.html', year:'Bilgi', label:'Bilgi Çöküşü'},
+  {file:'20-araclar.html', year:'Araç', label:'Modeller'},
+];
+
+function toggleFS(){
+  if(window.parent!==window){window.parent.postMessage({action:'toggleFS'},'*'); return;}
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){const i=TOOLS.indexOf(currentTool);if(i<TOOLS.length-1)showTool(TOOLS[i+1]);else window.location.href='../3_Teknik_Kullan%C4%B1m/23-bolum3-kapak.html';}
+  if(e.key==='ArrowLeft'){const i=TOOLS.indexOf(currentTool);if(i>0)showTool(TOOLS[i-1]);else window.location.href='22-ekip-arkadasi.html';}
+});
+</script>
+<script src="assets/chapter2-divider.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

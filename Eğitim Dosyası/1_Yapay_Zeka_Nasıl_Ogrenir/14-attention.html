@@ -1,0 +1,414 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12 · Attention Mekanizması</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#EC4899; --accent-soft:#FCE7F3; }
+
+/* QKV row */
+.qkv-row { display: flex; gap: 10px; }
+.qkv-item {
+  flex: 1; padding: 12px 10px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  text-align: center;
+}
+.qkv-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.qkv-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* Right viz */
+.attn-viz {
+  width: 100%;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.viz-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--muted-2);
+  text-align: center;
+}
+.word-row { display: flex; gap: 6px; justify-content: center; }
+.word-box {
+  flex: 1; padding: 10px 4px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  color: var(--ink);
+}
+.word-box:hover { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+.word-box.selected { background: var(--accent); color: var(--paper); border-color: var(--ink); border-width: 2px; }
+.word-box.target-hi { border-color: var(--accent); background: var(--accent-soft); }
+.word-box.target-mid { border-color: rgba(236,72,153,0.4); }
+.word-box.target-lo { opacity: 0.35; }
+
+.arc-area { width: 100%; height: 68px; display: block; overflow: visible; }
+
+.score-section { display: none; flex-direction: column; gap: 6px; }
+.score-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted-2);
+  text-align: center;
+}
+.score-bars { display: flex; gap: 4px; align-items: flex-end; height: 38px; }
+.score-labels { display: flex; gap: 4px; }
+
+.expl-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  font-size: 13px; color: var(--muted);
+  line-height: 1.55; min-height: 46px;
+}
+.expl-icon { font-size: 18px; flex-shrink: 0; }
+
+/* Heatmap */
+.heatmap-wrap {
+  width: 100%; max-width: 580px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 16px 20px;
+}
+.hm-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted-2);
+  text-align: center; margin-bottom: 12px;
+}
+.hm-grid { display: grid; grid-template-columns: 68px repeat(6, 1fr); gap: 3px; }
+.hm-cell {
+  height: 24px; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; transition: all 0.3s;
+}
+.hm-label {
+  font-size: 10px; color: var(--muted-2); font-weight: 600;
+  display: flex; align-items: center;
+  padding-right: 6px; white-space: nowrap; transition: all 0.3s;
+}
+.hm-col-label {
+  font-size: 8px; color: var(--muted-2);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; justify-content: center; height: 18px;
+}
+
+@keyframes arcIn {
+  from { stroke-dashoffset: 500; opacity: 0; }
+  to   { stroke-dashoffset: 0; opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">11</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">12</span>
+        <span>Attention</span>
+        <span class="dash"></span>
+        <span>2017</span>
+      </div>
+      <h1 class="fadeUp d2">Her kelimeye<br>eşit bakmamak:<br><span class="hl">Attention</span></h1>
+      <p class="lede fadeUp d3">
+        İnsan bir cümle okurken her kelimeye eşit dikkat vermez. Attention mekanizması modele aynı yeteneği kazandırır —
+        bir kelimeyi işlerken hangi diğer kelimelerin önemli olduğunu öğrenir ve
+        <strong>"banka"</strong> gibi çok anlamlı kelimeleri bağlamdan çözer.
+      </p>
+
+      <div class="qkv-row fadeUp d4">
+        <div class="qkv-item">
+          <div class="qkv-label" style="color:#3b82f6;">Q</div>
+          <div class="qkv-desc">Query<br>"Ne arıyorum?"</div>
+        </div>
+        <div class="qkv-item">
+          <div class="qkv-label" style="color:#10b981;">K</div>
+          <div class="qkv-desc">Key<br>"Bende ne var?"</div>
+        </div>
+        <div class="qkv-item">
+          <div class="qkv-label" style="color:#EC4899;">V</div>
+          <div class="qkv-desc">Value<br>"Bulunca ver"</div>
+        </div>
+      </div>
+
+      <div class="card fadeUp d4">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div>
+          <h3>Kullanım Senaryosu</h3>
+          <p>ChatGPT'ye uzun bir metin verip "özetle" dediğinde model tüm cümlelere eşit bakmaz — Attention sayesinde hangi kısımların önemli olduğuna odaklanır. Google Translate, GitHub Copilot ve tüm modern LLM'lerin kalbi bu mekanizmadır.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="13-embedding.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="15-llm.html" class="primary">LLM & Bugün<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">12 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right">
+    <div class="viz-head"><span class="dot"></span><span>Bir kelimeye tıkla → Attention ağırlıklarını gör</span></div>
+
+    <div class="attn-viz fadeUp d2">
+      <div class="word-row" id="wordRow">
+        <div class="word-box" onclick="selectWord(0)">Banka</div>
+        <div class="word-box" onclick="selectWord(1)">soygununda</div>
+        <div class="word-box" onclick="selectWord(2)">maskeli</div>
+        <div class="word-box" onclick="selectWord(3)">adam</div>
+        <div class="word-box" onclick="selectWord(4)">klimayı</div>
+        <div class="word-box" onclick="selectWord(5)">kırdı</div>
+      </div>
+
+      <svg class="arc-area" id="arcSvg" viewBox="0 0 580 68" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="glowS"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+      </svg>
+
+      <div class="score-section" id="scoreSection">
+        <div class="score-title">Softmax Dikkat Skorları</div>
+        <div class="score-bars" id="scoreBars"></div>
+        <div class="score-labels" id="scoreLabels"></div>
+      </div>
+
+      <div id="explBox" class="expl-row">
+        <span class="expl-icon">👆</span>
+        <span>Yukarıdaki bir kelimeye tıkla. Model o kelimeyi işlerken cümlenin geri kalanına nasıl baktığını göreceksin.</span>
+      </div>
+    </div>
+
+    <div class="heatmap-wrap fadeUp d3">
+      <div class="hm-header">Tam Attention Matrisi — tüm kelime çiftleri</div>
+      <div class="hm-grid" id="hmGrid"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const words   = ['Banka','soygununda','maskeli','adam','klimayı','kırdı'];
+const labels  = ['Banka','soygn.','maskeli','adam','klimayı','kırdı'];
+
+const attnWeights = [
+  [0.35,0.85,0.15,0.55,0.10,0.12],
+  [0.80,0.30,0.28,0.62,0.10,0.18],
+  [0.08,0.18,0.30,0.92,0.08,0.10],
+  [0.28,0.42,0.75,0.32,0.18,0.82],
+  [0.08,0.10,0.10,0.25,0.30,0.95],
+  [0.18,0.28,0.20,0.85,0.72,0.40]
+];
+
+const explanations = [
+  { icon:'🏦', text:'"Banka" kelimesini çözerken model "soygununda" ve "adam"a güçlü dikkat verir. Finans kurumu mu, nehir kıyısı mı? Belirsizliği bağlam çözer.' },
+  { icon:'🔍', text:'"Soygununda" kelimesi "Banka" ve "adam"a yüksek dikkat gösterir. Kim, nerede? Özne ve mekân ilişkisi bu bağlantıyla kurulur.' },
+  { icon:'🎭', text:'"Maskeli" kelimesi "adam"a en güçlü dikkat verir. Sıfat ile isim arasındaki dilbilgisel bağı model buradan öğrenir.' },
+  { icon:'🧍', text:'"Adam" kelimesi "maskeli" ve "kırdı"ya dikkat eder. Öznenin sıfatını ve eylemini birleştirerek tam anlamını oluşturur.' },
+  { icon:'❄️', text:'"Klimayı" kelimesi "kırdı"ya çok güçlü dikkat verir. Nesne-fiil ilişkisi: ne kırıldı? Doğrudan fiille bağlanır.' },
+  { icon:'⚡', text:'"Kırdı" fiili "adam" ve "klimayı"ya eşit güçlü dikkat verir. Fiil hem öznesini hem nesnesini aynı anda kavrar.' }
+];
+
+const WX = [48,144,240,336,432,528];
+let selectedIdx = -1;
+
+function buildHeatmap(){
+  const grid = document.getElementById('hmGrid');
+  grid.innerHTML = '';
+  const corner = document.createElement('div'); corner.className = 'hm-cell'; grid.appendChild(corner);
+  labels.forEach(w => {
+    const d = document.createElement('div'); d.className = 'hm-col-label'; d.textContent = w.substring(0,4); grid.appendChild(d);
+  });
+  attnWeights.forEach((row,ri) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'hm-label'; lbl.id = `hml-${ri}`; lbl.textContent = labels[ri]; grid.appendChild(lbl);
+    row.forEach((val,ci) => {
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell'; cell.id = `hmc-${ri}-${ci}`;
+      cell.style.background = `rgba(236,72,153,${val*0.82})`;
+      cell.style.color = val>0.5 ? '#fff' : val>0.25 ? 'rgba(236,72,153,0.9)' : 'rgba(0,0,0,0.2)';
+      cell.textContent = val.toFixed(1);
+      cell.title = `${words[ri]} → ${words[ci]}: ${val.toFixed(2)}`;
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function highlightHeatmapRow(idx){
+  document.querySelectorAll('.hm-cell').forEach(c => { c.style.transform=''; c.style.outline=''; });
+  document.querySelectorAll('.hm-label').forEach(l => { l.style.color=''; l.style.fontWeight=''; });
+  if(idx<0) return;
+  const lbl = document.getElementById(`hml-${idx}`);
+  if(lbl){ lbl.style.color='#EC4899'; lbl.style.fontWeight='800'; }
+  for(let ci=0;ci<6;ci++){
+    const c = document.getElementById(`hmc-${idx}-${ci}`);
+    if(c){ c.style.transform='scale(1.18)'; c.style.outline='1px solid rgba(236,72,153,0.4)'; }
+  }
+}
+
+function drawArcs(idx){
+  const svg = document.getElementById('arcSvg');
+  svg.innerHTML = `<defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="glowS"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>`;
+  const weights = attnWeights[idx];
+  const fromX = WX[idx];
+  weights.forEach((w,j) => {
+    if(j===idx || w<0.09) return;
+    const toX = WX[j];
+    const midX = (fromX+toX)/2;
+    const spread = Math.abs(j-idx);
+    const cy = 8+spread*10;
+    const opacity = Math.min(0.95,w);
+    const strokeW = 1+w*4;
+    const isStrong = w>=0.6;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${fromX},4 Q${midX},${cy} ${toX},4`);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', isStrong ? `rgba(236,72,153,${opacity})` : `rgba(236,72,153,${opacity*0.6})`);
+    path.setAttribute('stroke-width',strokeW);
+    path.setAttribute('filter', isStrong ? 'url(#glowS)' : 'url(#glow)');
+    path.style.strokeDasharray='500';
+    path.style.strokeDashoffset='500';
+    path.style.animation=`arcIn 0.45s ease forwards ${j*0.06}s`;
+    svg.appendChild(path);
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',midX); txt.setAttribute('y',cy+11);
+    txt.setAttribute('text-anchor','middle'); txt.setAttribute('font-size','9');
+    txt.setAttribute('fill',`rgba(236,72,153,${Math.min(1,opacity+0.1)})`);
+    txt.setAttribute('font-family','JetBrains Mono');
+    txt.textContent = w.toFixed(2);
+    svg.appendChild(txt);
+  });
+  const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('cx',fromX); dot.setAttribute('cy','4'); dot.setAttribute('r','5');
+  dot.setAttribute('fill','#EC4899'); dot.setAttribute('filter','url(#glowS)');
+  svg.appendChild(dot);
+}
+
+function drawScoreBars(idx){
+  const section = document.getElementById('scoreSection');
+  const barsEl  = document.getElementById('scoreBars');
+  const labsEl  = document.getElementById('scoreLabels');
+  section.style.display='flex';
+  barsEl.innerHTML=''; labsEl.innerHTML='';
+  const weights = attnWeights[idx];
+  const maxW = Math.max(...weights);
+  weights.forEach((w,j) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;';
+    const valLbl = document.createElement('div');
+    valLbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:8px;color:rgba(236,72,153,0.8);';
+    valLbl.textContent=w.toFixed(2);
+    const bar = document.createElement('div');
+    const h = Math.max(4,Math.round((w/maxW)*30));
+    bar.style.cssText=`width:100%;height:${h}px;border-radius:2px 2px 0 0;transition:height 0.4s ease ${j*0.05}s;`;
+    bar.style.background = j===idx ? 'rgba(236,72,153,0.15)' : `rgba(236,72,153,${0.12+w*0.72})`;
+    bar.style.border = j===idx ? '1.5px solid rgba(236,72,153,0.3)' : '1.5px solid rgba(236,72,153,0.5)';
+    wrap.appendChild(valLbl); wrap.appendChild(bar); barsEl.appendChild(wrap);
+    const lbl = document.createElement('div');
+    lbl.style.cssText=`flex:1;font-size:8px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${w>=0.6?'700':'400'};`;
+    lbl.style.color = j===idx ? 'rgba(236,72,153,0.45)' : (w>=0.6 ? '#EC4899' : '#8A8A8A');
+    lbl.textContent=labels[j].substring(0,6);
+    labsEl.appendChild(lbl);
+  });
+}
+
+function selectWord(idx){
+  selectedIdx=idx;
+  const boxes = document.querySelectorAll('.word-box');
+  boxes.forEach((b,i) => {
+    b.className='word-box';
+    if(i===idx){ b.classList.add('selected'); return; }
+    const w = attnWeights[idx][i];
+    if(w>=0.6) b.classList.add('target-hi');
+    else if(w>=0.28) b.classList.add('target-mid');
+    else b.classList.add('target-lo');
+  });
+  drawArcs(idx);
+  drawScoreBars(idx);
+  highlightHeatmapRow(idx);
+  const e = explanations[idx];
+  document.getElementById('explBox').innerHTML=`<span class="expl-icon">${e.icon}</span><span>${e.text}</span>`;
+}
+
+buildHeatmap();
+setTimeout(() => { if(selectedIdx<0) selectWord(0); }, 1100);
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '14-attention.html';
+
+function toggleFS(){
+  if(window.parent!==window){ window.parent.postMessage({action:'toggleFS'},'*'); return; }
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight') window.location.href='15-llm.html';
+  if(e.key==='ArrowLeft')  window.location.href='13-embedding.html';
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

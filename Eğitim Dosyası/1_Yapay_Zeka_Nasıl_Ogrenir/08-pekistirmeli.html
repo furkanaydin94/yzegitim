@@ -1,0 +1,490 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>07 · Pekiştirmeli Öğrenme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent: #FFD400; }
+
+/* Right panel */
+.right.rl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 48px 36px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 62px);
+  grid-template-rows: repeat(5, 62px);
+  gap: 0;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  position: relative;
+}
+.cell {
+  width: 62px; height: 62px;
+  background: var(--paper);
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: center;
+}
+.cell:nth-child(5n) { border-right: none; }
+.cell:nth-child(n+21) { border-bottom: none; }
+
+/* Fire cell */
+.cell.fire { background: #D72638; }
+.cell.fire::before, .cell.fire::after {
+  content: "";
+  position: absolute;
+  width: 22px; height: 2.5px;
+  background: var(--paper);
+  border-radius: 1px;
+}
+.cell.fire::before { transform: rotate(45deg); }
+.cell.fire::after  { transform: rotate(-45deg); }
+
+/* Goal cell */
+.cell.goal { background: var(--accent); }
+.cell.goal::before {
+  content: "";
+  width: 22px; height: 22px;
+  background: var(--ink);
+  clip-path: polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+}
+
+/* Agent */
+.agent {
+  position: absolute;
+  width: 62px; height: 62px;
+  top: 0; left: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10;
+  transition: all 0.44s cubic-bezier(.4,0,.2,1);
+}
+.agent-body {
+  width: 34px; height: 34px;
+  background: var(--ink);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.agent-body::before, .agent-body::after {
+  content: "";
+  position: absolute;
+  width: 7px; height: 7px;
+  background: var(--paper);
+  border-radius: 50%;
+  top: 9px;
+}
+.agent-body::before { left: 6px; }
+.agent-body::after  { right: 6px; }
+
+.agent.crashed .agent-body { background: #D72638; }
+.agent.crashed .agent-body::before,
+.agent.crashed .agent-body::after {
+  width: 8px; height: 2px;
+  border-radius: 10px;
+  background: var(--paper);
+  top: 14px;
+}
+.agent.crashed .agent-body::before { transform: rotate(45deg); left: 5px; }
+.agent.crashed .agent-body::after  { transform: rotate(-45deg); right: 5px; }
+
+.agent.won .agent-body { background: var(--accent); }
+.agent.won .agent-body::before,
+.agent.won .agent-body::after { background: var(--ink); }
+
+/* Toast */
+.toast {
+  position: absolute;
+  top: 20px; left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1.5px solid var(--ink);
+  background: var(--paper); color: var(--ink);
+  z-index: 50;
+  opacity: 0; transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+.toast.fire { background: var(--ink); color: var(--accent); }
+.toast.win  { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+
+/* Scoreboard */
+.scoreboard {
+  display: flex;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+}
+.sc {
+  padding: 12px 24px;
+  text-align: left;
+  border-right: 1.5px solid var(--ink);
+  min-width: 100px;
+}
+.sc:last-child { border-right: none; }
+.sc .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+.sc .val {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 28px; font-weight: 800; line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.sc .val.neg { color: #D72638; }
+.sc .val.pos { color: #0E7C3A; }
+
+/* Controls */
+.controls { display: flex; gap: 10px; align-items: center; }
+.btn {
+  padding: 13px 26px;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  border: 1.5px solid var(--ink);
+  background: var(--ink); color: var(--paper);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--accent); color: var(--ink); border-color: var(--ink); }
+.btn.ghost { background: var(--paper); color: var(--ink); }
+.btn.ghost:hover { background: var(--ink); color: var(--paper); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn svg { width: 14px; height: 14px; }
+
+/* Fact box in left panel */
+.fact-box {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.fact-box h4 {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink); margin-bottom: 6px;
+}
+.fact-box p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+.fact-box p strong { font-weight: 600; color: var(--ink); }
+.fact-box a {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.06em;
+  color: var(--ink); text-decoration: none;
+  border-bottom: 1.5px solid var(--ink); padding-bottom: 2px;
+  transition: 0.15s;
+}
+.fact-box a svg { width: 11px; height: 11px; }
+.fact-box a:hover { color: #D72638; border-bottom-color: #D72638; }
+.card a.ref svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+}
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">6</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">07</span>
+        <span>Pekiştirmeli Öğrenme</span>
+        <span class="dash"></span>
+        <span>1980</span>
+      </div>
+      <h1 class="fadeUp d2">Ödül ve cezayla<br><span class="hl">öğrenen</span> ajan.</h1>
+      <p class="lede fadeUp d3">
+        Ne veri seti ne de kural kitabı var. Ajana sadece bir ortam ve bir amaç
+        verilir — doğru hamleleri <strong>ödülle</strong>, yanlışları <strong>cezayla</strong> keşfeder.
+      </p>
+
+      <div class="cards fadeUp d4">
+        <div class="card">
+          <div class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><path d="M12 4v2"/></svg>
+          </div>
+          <div>
+            <h3>ChatGPT ve Claude</h3>
+            <p>İnsan değerlendiricilerin model yanıtlarını puanlamasıyla elde edilen <strong>geri besleme sinyali</strong>, modele "daha iyi" cevabı öğretmek için ödül olarak kullanılır (RLHF).</p>
+          </div>
+        </div>
+
+        <div class="card alt">
+          <div class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a3 3 0 0 0-3 3v1.5"/><path d="M15 4a3 3 0 0 1 3 3v1.5"/><path d="M5 11h14v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><path d="M9 16h6"/></svg>
+          </div>
+          <div>
+            <h3>Cortical Labs · DishBrain</h3>
+            <p>Laboratuvarda yetiştirilen <strong>200.000 insan nöronu</strong> silikon çipe yerleştirildi. DOOM girdileri elektriksel sinyale çevrildi; nöronlar yalnızca <strong>7 günde</strong> oyunu kontrol etmeyi öğrendi.</p>
+            <a class="ref" href="https://www.youtube.com/watch?v=8apoH29WaOA" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9-9"/><path d="M8 8h8v8"/></svg>
+              Belgesel · YouTube
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="07-gozetimsiz.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Geri
+        </a>
+        <a href="09-karar-agaclari.html" class="primary">
+          Karar Ağaçları
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+      <div class="pageno">07 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right rl">
+    <div class="viz-head"><span class="dot"></span><span>Q-Learning · Labirent Simülasyonu</span></div>
+
+    <div style="position:relative">
+      <div class="toast" id="toast"></div>
+      <div class="grid" id="grid">
+        <div class="agent" id="agent"><div class="agent-body"></div></div>
+        <!-- cells generated by JS -->
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="sc">
+        <div class="lbl">Bölüm</div>
+        <div class="val" id="v-ep">1</div>
+      </div>
+      <div class="sc">
+        <div class="lbl">Toplam Ödül</div>
+        <div class="val" id="v-sc">0</div>
+      </div>
+      <div class="sc">
+        <div class="lbl">Adım</div>
+        <div class="val" id="v-stp">0</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="playBtn" onclick="playEpisode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Eğitimi Başlat
+      </button>
+      <button class="btn ghost" onclick="resetSim()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Sıfırla
+      </button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* === MAZE BUILD === */
+const FIRE = [[1,0],[3,1],[0,2],[2,2],[3,3],[1,4]];
+const GOAL = [4,3];
+const CELL = 62;
+const N = 5;
+
+const gridEl = document.getElementById('grid');
+for (let y = 0; y < N; y++) {
+  for (let x = 0; x < N; x++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    if (FIRE.some(([fx,fy]) => fx===x && fy===y)) cell.classList.add('fire');
+    if (GOAL[0]===x && GOAL[1]===y) cell.classList.add('goal');
+    gridEl.appendChild(cell);
+  }
+}
+
+const agentEl = document.getElementById('agent');
+function moveAgent(x, y) {
+  agentEl.style.left = (x * CELL) + 'px';
+  agentEl.style.top  = (y * CELL) + 'px';
+}
+
+/* === EPISODE ROUTES === */
+const EP_NAIVE = [
+  {x:0,y:0}, {x:1,y:0,fire:true}
+];
+const EP_LEARNED = [
+  {x:0,y:0},
+  {x:0,y:1},
+  {x:1,y:1},
+  {x:2,y:1},
+  {x:2,y:0},
+  {x:3,y:0},
+  {x:4,y:0},
+  {x:4,y:1},
+  {x:4,y:2},
+  {x:4,y:3, win:true}
+];
+
+let phase = 0; // 0=ep1 ready, 1=ep2 ready, 2=done
+let running = false;
+let score = 0, ep = 1, steps = 0;
+
+const elEp  = document.getElementById('v-ep');
+const elSc  = document.getElementById('v-sc');
+const elStp = document.getElementById('v-stp');
+const playBtn = document.getElementById('playBtn');
+
+function updateUI() {
+  elEp.textContent  = ep;
+  elSc.textContent  = score;
+  elSc.className = 'val' + (score < 0 ? ' neg' : score > 0 ? ' pos' : '');
+  elStp.textContent = steps;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function playEpisode() {
+  if (running) return;
+  if (phase === 2) { resetSim(); return; }
+
+  running = true;
+  playBtn.disabled = true;
+
+  const route = phase === 0 ? EP_NAIVE : EP_LEARNED;
+  let i = 0;
+  agentEl.classList.remove('crashed', 'won');
+
+  const tick = () => {
+    if (i >= route.length) { running = false; playBtn.disabled = false; return; }
+    const p = route[i];
+    moveAgent(p.x, p.y);
+    steps++;
+
+    if (p.fire) {
+      score -= 10; updateUI();
+      setTimeout(() => {
+        agentEl.classList.add('crashed');
+        showToast('Ajan tuzağa düştü · Ceza −10', 'fire');
+      }, 350);
+      setTimeout(() => {
+        agentEl.classList.remove('crashed');
+        ep = 2; phase = 1;
+        moveAgent(0, 0);
+        updateUI();
+        running = false;
+        playBtn.disabled = false;
+        playBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Politikayı Uygula`;
+      }, 2100);
+      return;
+    }
+
+    if (p.win) {
+      score += 100; updateUI();
+      agentEl.classList.add('won');
+      showToast('Hedefe ulaşıldı · Ödül +100', 'win');
+      phase = 2;
+      running = false;
+      playBtn.disabled = false;
+      playBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Yeniden Başlat`;
+      return;
+    }
+
+    score -= 1; updateUI();
+    i++;
+    setTimeout(tick, 470);
+  };
+  tick();
+}
+
+function resetSim() {
+  running = false;
+  phase = 0; ep = 1; score = 0; steps = 0;
+  agentEl.classList.remove('crashed', 'won');
+  moveAgent(0, 0);
+  updateUI();
+  playBtn.disabled = false;
+  playBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Eğitimi Başlat`;
+}
+
+moveAgent(0, 0);
+updateUI();
+
+/* === SLIDES / NAV === */
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '08-pekistirmeli.html';
+
+function toggleFS() {
+  if (window.parent !== window) { window.parent.postMessage({ action: 'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '09-karar-agaclari.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '07-gozetimsiz.html';
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); playEpisode(); }
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,929 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uygulamalar · Bolum 3</title>
+
+  <script>
+    tailwind.config = {
+      corePlugins: {
+        preflight: false,
+      }
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --bg: #04080f;
+      --surface: #0d1526;
+      --surface2: #111e35;
+      --surface3: #0a1020;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.04);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --accent-glow: rgba(16, 185, 129, 0.35);
+      --tl-h: 68px;
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── NOISE + GLOW LAYER ─────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 72% 20%, rgba(16, 185, 129, 0.055) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 15% 80%, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      height: calc(100vh - var(--tl-h));
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── LEFT PANEL ─────────────────────────────────────────── */
+    .left-panel {
+      width: 45%;
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+    }
+
+    .left-panel::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    .left-panel::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 2px;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+      pointer-events: none;
+    }
+
+    /* ─── DIVIDER ─────────────────────────────────────────────── */
+    .v-divider {
+      width: 5px;
+      flex-shrink: 0;
+      cursor: col-resize;
+      background: var(--border);
+      transition: background 0.2s;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .v-divider:hover,
+    .v-divider.dragging {
+      background: rgba(16, 185, 129, 0.3);
+    }
+
+    .v-divider::after {
+      content: '';
+      width: 2px;
+      height: 32px;
+      border-radius: 1px;
+      background: rgba(255, 255, 255, 0.12);
+      transition: background 0.2s;
+    }
+
+    .v-divider:hover::after,
+    .v-divider.dragging::after {
+      background: rgba(16, 185, 129, 0.6);
+    }
+
+    /* ─── RIGHT PANEL ────────────────────────────────────────── */
+    .right-panel {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-panel::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    .right-panel::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 2px;
+    }
+
+    /* ─── BADGE ──────────────────────────────────────────────── */
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--accent);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .slide-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    /* ─── HERO TITLE ─────────────────────────────────────────── */
+    .hero-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-tr {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(24px, 2.8vw, 40px);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-en {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(22px, 2.5vw, 36px);
+      font-weight: 800;
+      color: transparent;
+      background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    /* ─── DESCRIPTION ────────────────────────────────────────── */
+    .desc-text {
+      font-size: 13.5px;
+      color: var(--muted2);
+      line-height: 1.7;
+    }
+
+    /* ─── PLACEHOLDER CARDS ─────────────────────────────────── */
+    .placeholder-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .placeholder-card {
+      background: var(--surface);
+      border: 1.5px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .placeholder-card:hover {
+      border-color: rgba(16, 185, 129, 0.25);
+      background: var(--surface2);
+    }
+
+    .placeholder-card .card-icon {
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .placeholder-card .card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .placeholder-card .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .placeholder-card .card-sub {
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    /* ─── RIGHT PLACEHOLDER ─────────────────────────────────── */
+    .right-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+    }
+
+    .right-placeholder .big-emoji {
+      font-size: 64px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .right-placeholder .ph-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .right-placeholder .ph-sub {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.6;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    /* ─── NAVIGATION ─────────────────────────────────────────── */
+    .nav-buttons {
+      position: fixed;
+      bottom: calc(var(--tl-h) + 12px);
+      right: 16px;
+      display: flex;
+      gap: 6px;
+      z-index: 300;
+    }
+
+    .nav-btn {
+      background: rgba(13, 21, 38, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      color: var(--muted2);
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      transition: all 0.18s;
+    }
+
+    .nav-btn:hover {
+      background: var(--surface2);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+
+    .nav-btn.next {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .nav-btn.next:hover {
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    /* ─── FULLSCREEN ─────────────────────────────────────────── */
+    .fs-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 200;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .fs-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ─── TIMELINE ───────────────────────────────────────────── */
+
+
+
+
+
+
+
+
+
+
+
+
+    /* ─── ANIMATIONS ─────────────────────────────────────────── */
+    .fadeUp {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: fadeUpAnim 0.48s ease forwards;
+    }
+
+    .fadeUp-2 {
+      animation-delay: 0.08s;
+    }
+
+    .fadeUp-3 {
+      animation-delay: 0.16s;
+    }
+
+    .fadeUp-4 {
+      animation-delay: 0.24s;
+    }
+
+    .fadeUp-5 {
+      animation-delay: 0.32s;
+    }
+
+    .fadeUp-6 {
+      animation-delay: 0.40s;
+    }
+
+    @keyframes fadeUpAnim {
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* APP FRAME STYLES */
+    .app-frame {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e293b;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+      min-height: 500px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #1e293b, #334155);
+      border-bottom: 1px solid #475569;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .browser-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .browser-dots span:nth-child(1) {
+      background: #ef4444;
+    }
+
+    .browser-dots span:nth-child(2) {
+      background: #eab308;
+    }
+
+    .browser-dots span:nth-child(3) {
+      background: #22c55e;
+    }
+
+    .url-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .url-bar i {
+      color: #22c55e;
+    }
+
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .app-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .iframe-container {
+      flex: 1;
+      position: relative;
+      background: white;
+    }
+
+    .iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .open-external-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      color: white;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      z-index: 10;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .open-external-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .page-badge {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid #475569;
+      border-radius: 12px;
+      z-index: 10;
+    }
+
+    .page-badge-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: white;
+    }
+
+    .page-badge-text {
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .page-badge-subtitle {
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    .app-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .app-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .app-card.active {
+      background: var(--surface2);
+      border-color: var(--accent);
+      box-shadow: 0 4px 20px var(--accent-dim);
+    }
+
+    .app-desc-container {
+      margin-top: 20px;
+      padding: 20px;
+      background: var(--surface3);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--muted2);
+      display: none;
+    }
+
+    .app-desc-container.active {
+      display: block;
+      animation: fadeUpAnim 0.3s forwards;
+    }
+
+    .info-section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      padding: 2px 8px;
+      background: rgba(99, 102, 241, 0.12);
+      border-radius: 4px;
+    }
+
+    .info-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4ade80;
+      margin-top: 4px;
+    }
+  </style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter3-theme.css">
+</head>
+
+<body>
+<script>
+window.CHAPTER3_SLIDES = [
+  { file: '23-bolum3-kapak.html', year: 'B3', label: 'Kapak', cover: true },
+  { file: '24-ai-ideler.html', year: 'IDE', label: "AI IDE'ler" },
+  { file: '28-n8n.html', year: 'n8n', label: 'n8n Otomasyon' },
+  { file: '29-uygulamalar.html', year: 'App', label: 'Uygulamalar' },
+  { file: '30-local-llm.html', year: 'LLM', label: 'Yerel LLM' },
+  { file: '34-ft-vs-rag.html', year: 'RAG', label: 'FT vs RAG' },
+  { file: '35-kurumsal-ai.html', year: 'AI', label: 'Kurumsal AI' },
+  { file: '36-gelecek.html', year: 'Gelecek', label: 'Gelecek' }
+];
+</script>
+<nav class="htl">
+  <div class="htl-label">Bolum 3<b>Teknik Kullanim</b></div>
+  <div class="htl-track"><div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div><div class="htl-items" id="htlItems"></div></div>
+  <div class="htl-progress"><b id="prog">1</b> / <span id="progTotal">8</span></div>
+</nav>
+
+
+  <div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel" id="leftPanel">
+      <div id="leftInner" style="display:flex;flex-direction:column;gap:inherit;min-height:min-content;">
+
+        <!-- Badge -->
+        <div class="fadeUp">
+          <div class="slide-badge">B&ouml;l&uuml;m 3 &middot; Vitrin</div>
+        </div>
+
+
+        <!-- Hero title -->
+        <div class="hero-wrap fadeUp fadeUp-2">
+          <div class="hero-tr">Uygulama Örnekleri</div>
+          <div class="hero-en">Saha Projeleri</div>
+        </div>
+
+        <!-- Description -->
+        <div class="desc-text fadeUp fadeUp-3">
+          Bu eğitimde gördüğümüz araçlarla sıfırdan inşa edilmiş büyük gerçek saha uygulamaları.
+        </div>
+
+        <!-- App selection cards -->
+        <div class="fadeUp fadeUp-4" style="display:flex; flex-direction:column; gap:12px;">
+          <div class="app-card active" onclick="switchApp(0)" id="card-0">
+            <div
+              style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #10b981, #059669); display:flex; align-items:center; justify-content:center; font-size:16px;">
+              <i class="fas fa-hands-helping"></i>
+            </div>
+            <div>
+              <div style="color:white; font-weight:700; font-size:15px;">Sosyal Hizmetler</div>
+              <div style="color:var(--muted2); font-size:12px;">Hizmet Raporlama Sistemi</div>
+            </div>
+          </div>
+
+          <div class="app-card" onclick="switchApp(1)" id="card-1">
+            <div
+              style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #f59e0b, #d97706); display:flex; align-items:center; justify-content:center; font-size:16px;">
+              <i class="fas fa-list-check"></i>
+            </div>
+            <div>
+              <div style="color:white; font-weight:700; font-size:15px;">Kriter Viewer</div>
+              <div style="color:var(--muted2); font-size:12px;">Kriter Çalışması</div>
+            </div>
+          </div>
+
+          <div class="app-card" onclick="switchApp(2)" id="card-2">
+            <div
+              style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #3b82f6, #1d4ed8); display:flex; align-items:center; justify-content:center; font-size:16px;">
+              <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <div>
+              <div style="color:white; font-weight:700; font-size:15px;">Sosyal Risk Haritası</div>
+              <div style="color:var(--muted2); font-size:12px;">Saha Takibi</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- App Descriptions -->
+        <div class="app-desc-container active fadeUp fadeUp-5" id="desc-0">
+          <span class="info-section-label">Hizmet Raporlama Sistemi</span><br>
+          İlçe ve İstanbul genelinde hizmet raporlama sürecini yönetmek üzere geliştirdiğim bu uygulama, sistemin
+          <strong>prototipi</strong>dir. Müdürlüklerin sunduğu hizmet verilerinin toplanmasından, doğrulanmasından
+          ve otomatik raporlara dönüştürülmesine kadar tüm sürecin yapılandırılmasını amaçlamaktadır.<br><br>
+
+          <span class="info-section-label">Ne İşe Yarar?</span><br>
+          • Rapor Üretimi: Otomatik aylık raporlama<br>
+          • CBS Haritalama: Coğrafi bilgi sistemi<br>
+          • Stratejik Takip: Hedef ve gösterge izleme<br><br>
+          <span class="info-cta"><i class="fas fa-th-large"></i> Hizmet Kartları → Lokasyon bazlı raporlar</span>
+        </div>
+
+        <div class="app-desc-container" id="desc-1">
+          <span class="info-section-label">Bu Çalışma Nedir?</span><br>
+          Sosyal Hizmetler Dairesi Başkanlığı bünyesinde sunulan hizmetlerin analiz edilmesiyle, uygulama
+          biçimlerini interaktif bir akış diyagramı üzerinden modellediğim bir çalışmadır.<br><br>
+
+          <span class="info-section-label">Nasıl Kullanılır?</span><br>
+          • En solda hizmet filtreleri yer alır.<br>
+          • <strong>Sosyoekonomik Değerlendirme</strong> düğümleri dezavantajlılık ilişkisini gösterir.
+        </div>
+
+        <div class="app-desc-container" id="desc-2">
+          <span class="info-section-label">Sosyal Risk Haritası</span><br>
+          İlçe Sorumluluğu Projesi'ni sahada yönetmek üzere geliştirdiğim, mahalle düzeyinde risk analizleri yapabilen
+          CBS (Coğrafi Bilgi Sistemleri) aracıdır.<br><br>
+
+          <span class="info-section-label">Özellikler</span><br>
+          • Harita üzerinde mahalle düzeyinde risk analizi<br>
+          • Saha görüşme programı ve atama listesi takibi<br>
+          • Offline çalışma desteği ve form yönetimi
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="v-divider" id="divider"></div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel" id="rightPanel">
+      <div id="rightInner" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+
+
+        <div style="padding:24px; padding-bottom: 40px; display:flex; flex-direction:column; flex:1;">
+          <div class="app-frame fadeUp fadeUp-2">
+            <!-- Browser Header -->
+            <div class="app-header">
+              <div class="browser-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="url-bar">
+                <i class="fas fa-lock"></i>
+                <span id="appUrl">furkanaydin94.github.io/hizmetler/index.html</span>
+              </div>
+              <div class="app-title">
+                <div class="app-title-icon" id="appIconBox"
+                  style="background: linear-gradient(135deg, #10b981, #059669);">
+                  <i class="fas fa-hands-helping" id="appIcon"></i>
+                </div>
+                <span id="appTitleText">Sosyal Hizmetler</span>
+              </div>
+            </div>
+
+            <!-- Embedded App -->
+            <div class="iframe-container">
+              <iframe id="appIframe" src="https://furkanaydin94.github.io/hizmetler/index.html"
+                allow="fullscreen"></iframe>
+
+              <!-- Badge -->
+              <div class="page-badge">
+                <div class="page-badge-icon" id="badgeIconBox"
+                  style="background: linear-gradient(135deg, #10b981, #059669);">
+                  <i class="fas fa-building" id="badgeIcon"></i>
+                </div>
+                <div>
+                  <div class="page-badge-text">Detaylı Kullanım Örnekleri</div>
+                  <div class="page-badge-subtitle" id="badgeSub">Hizmet İstatistik Raporları</div>
+                </div>
+              </div>
+
+              <!-- External Link -->
+              <a id="extLink" href="https://furkanaydin94.github.io/hizmetler/index.html" target="_blank"
+                class="open-external-btn" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <i class="fas fa-external-link-alt"></i> Tam Ekranda Aç
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.location.href='28-n8n.html'">&larr; Geri</button>
+    <button class="nav-btn next" onclick="window.location.href='30-local-llm.html'">S&inodot;radaki &rarr;</button>
+  </div>
+
+  <!-- Fullscreen -->
+  
+
+  <!-- Timeline -->
+
+  
+
+  <script>
+    const APPS = [
+      {
+        url: "https://furkanaydin94.github.io/hizmetler/index.html",
+        displayUrl: "furkanaydin94.github.io/hizmetler/",
+        title: "Sosyal Hizmetler",
+        icon: "fa-hands-helping",
+        gradient: "linear-gradient(135deg, #10b981, #059669)",
+        badgeIcon: "fa-building",
+        badgeSub: "Hizmet İstatistik Raporları"
+      },
+      {
+        url: "https://furkanaydin94.github.io/kriterler/",
+        displayUrl: "furkanaydin94.github.io/kriterler/",
+        title: "Kriter Viewer",
+        icon: "fa-list-check",
+        gradient: "linear-gradient(135deg, #f59e0b, #d97706)",
+        badgeIcon: "fa-clipboard-list",
+        badgeSub: "Kriter Çalışması"
+      },
+      {
+        url: "https://sosyalhizmet.github.io/sosyalrisk/index.html",
+        displayUrl: "sosyalhizmet.github.io/sosyalrisk/",
+        title: "Sosyal Risk Haritası",
+        icon: "fa-map-marked-alt",
+        gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+        badgeIcon: "fa-chart-pie",
+        badgeSub: "Sosyal Risk Haritalandırma Çalışması"
+      }
+    ];
+
+    function switchApp(index) {
+      // Left panel selections
+      document.querySelectorAll('.app-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('card-' + index).classList.add('active');
+
+      document.querySelectorAll('.app-desc-container').forEach(d => d.classList.remove('active'));
+      document.getElementById('desc-' + index).classList.add('active');
+
+      // Right panel updates
+      const app = APPS[index];
+      document.getElementById('appUrl').innerText = app.displayUrl;
+      document.getElementById('appTitleText').innerText = app.title;
+
+      document.getElementById('appIcon').className = 'fas ' + app.icon;
+      document.getElementById('appIconBox').style.background = app.gradient;
+
+      document.getElementById('badgeIcon').className = 'fas ' + app.badgeIcon;
+      document.getElementById('badgeIconBox').style.background = app.gradient;
+      document.getElementById('badgeSub').innerText = app.badgeSub;
+
+      document.getElementById('extLink').href = app.url;
+      document.getElementById('extLink').style.background = app.gradient;
+
+      document.getElementById('appIframe').src = app.url;
+    }
+  </script>
+
+<script src="assets/chapter3-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+
+</html>

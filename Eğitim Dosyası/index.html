@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yapay Zeka Eğitimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF7;
+  --paper: #FFFFFF;
+  --ink: #0A0A0A;
+  --muted: #525252;
+  --muted-2: #8A8A8A;
+  --line-soft: #E5E4DE;
+  --c1: #F97316;
+  --c2: #A855F7;
+  --c3: #6366F1;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--ink); }
+
+/* ══ PLAYER (iframe tam ekran oynatıcı) ════════════════ */
+#player {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+}
+#player.active { display: block; }
+#player iframe {
+  width: 100%; height: 100%;
+  border: none; display: block;
+}
+#close-btn {
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 1100;
+  width: 36px; height: 36px;
+  background: rgba(0,0,0,0.55);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: #fff;
+  cursor: pointer;
+  display: none;
+  align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: background 0.15s;
+}
+#close-btn:hover { background: rgba(0,0,0,0.85); }
+#player.active ~ #close-btn { display: flex; }
+
+/* ══ INDEX SAYFASI ══════════════════════════════════════ */
+#listing {
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-soft) transparent;
+}
+
+/* Top bar */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center;
+  padding: 0 64px;
+  height: 64px;
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
+  gap: 18px;
+}
+.topbar-logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.topbar-logo .sq {
+  width: 16px; height: 16px;
+  background: var(--c1);
+  border: 1.5px solid var(--ink);
+  flex-shrink: 0;
+}
+.topbar-logo span {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 15px; font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.topbar-rule { flex: 1; height: 1px; background: var(--line-soft); }
+.topbar-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+}
+.btn-start {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 11px 22px;
+  background: var(--ink); color: var(--paper);
+  border: 1.5px solid var(--ink);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.btn-start:hover { background: var(--c1); border-color: var(--c1); }
+.btn-start svg { width: 14px; height: 14px; }
+
+/* Hero strip */
+.hero-strip {
+  padding: 56px 64px 40px;
+  border-bottom: 1.5px solid var(--ink);
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.hero-strip::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: var(--c1);
+}
+.hero-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.hero-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: clamp(40px, 5vw, 72px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+.hero-title span {
+  display: inline-block;
+  background: linear-gradient(180deg, transparent 60%, var(--c1) 60% 92%, transparent 92%);
+  padding: 0 4px;
+}
+.hero-desc {
+  font-size: 16px; line-height: 1.6;
+  color: var(--muted);
+  max-width: 64ch;
+}
+
+/* Chapter sections */
+.chapter-section {
+  padding: 40px 64px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.chapter-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  background: var(--ink); color: var(--paper);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.chapter-badge .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.chapter-name {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 20px; font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.chapter-rule { flex: 1; height: 1.5px; background: var(--ink); }
+.chapter-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Slide grid */
+.slide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2px;
+}
+.slide-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--ink);
+  transition: background 0.15s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.slide-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--ac, var(--ink));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.2s;
+}
+.slide-card:hover { background: var(--bg); }
+.slide-card:hover::before { transform: scaleY(1); }
+.slide-card:hover .card-arrow { opacity: 1; transform: translate(0,0); }
+
+.card-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted-2);
+}
+.card-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.card-year {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em;
+  color: var(--ac, var(--muted));
+}
+.card-arrow {
+  position: absolute;
+  bottom: 14px; right: 16px;
+  opacity: 0;
+  transform: translate(-4px, 4px);
+  transition: opacity 0.15s, transform 0.15s;
+  color: var(--ac, var(--ink));
+}
+.card-arrow svg { width: 14px; height: 14px; }
+
+/* cover card style */
+.slide-card.cover-card {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.slide-card.cover-card .card-num { color: rgba(255,255,255,0.4); }
+.slide-card.cover-card .card-label { color: var(--paper); }
+.slide-card.cover-card .card-year { color: rgba(255,255,255,0.5); }
+.slide-card.cover-card:hover { background: #1a1a1a; }
+.slide-card.cover-card::before { background: var(--ac, var(--c1)); }
+.slide-card.cover-card .card-arrow { color: var(--paper); }
+
+/* Footer */
+.index-foot {
+  padding: 24px 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.fadeUp { animation: fadeUp 0.5s cubic-bezier(.2,.7,.2,1) both; }
+.d1{animation-delay:0.04s} .d2{animation-delay:0.1s} .d3{animation-delay:0.18s}
+.d4{animation-delay:0.26s} .d5{animation-delay:0.34s}
+
+@media (max-width: 900px) {
+  .topbar, .hero-strip, .chapter-section { padding-left: 28px; padding-right: 28px; }
+  .hero-title { font-size: 36px; }
+  .slide-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── PLAYER (iframe oynatıcı) ─────────────────────── -->
+<div id="player">
+  <iframe id="slideFrame" allowfullscreen></iframe>
+</div>
+
+
+<!-- ── INDEX SAYFASI ──────────────────────────────────── -->
+<div id="listing">
+
+  <!-- Top bar -->
+  <div class="topbar fadeUp d1">
+    <div class="topbar-logo">
+      <div class="sq"></div>
+      <span>Yapay Zeka Eğitimi</span>
+    </div>
+    <div class="topbar-rule"></div>
+    <span class="topbar-meta">3 B&ouml;l&uuml;m &middot; 27 Slayt</span>
+    <button class="btn-start" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Sunumu Başlat
+    </button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero-strip fadeUp d2">
+    <div class="hero-eyebrow">Eğitim İçeriği Genel Bakış</div>
+    <h1 class="hero-title">Yapay Zeka<br><span>Eğitimi</span></h1>
+    <p class="hero-desc">
+      Temel kavramlar, tarihsel gelişim, güncel araçlar ve iş süreçlerine entegrasyon.
+      Aşağıdan istediğin slayda tıklayarak başlayabilir ya da sunumu baştan başlatabilirsin.
+    </p>
+  </div>
+
+  <!-- Bölüm 1 -->
+  <div class="chapter-section fadeUp d3">
+    <div class="chapter-header">
+      <div class="chapter-badge" style="background:#F97316;color:#fff">
+        <span>Bölüm 1</span>
+      </div>
+      <span class="chapter-name">Yapay Zeka Nasıl Öğrenir?</span>
+      <div class="chapter-rule"></div>
+      <span class="chapter-count">13 Slayt</span>
+    </div>
+    <div class="slide-grid">
+      <div class="slide-card cover-card" style="--ac:#F97316" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html')">
+        <div class="card-num">01</div>
+        <div class="card-label">Kapak</div>
+        <div class="card-year">Giriş</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#2563EB" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/02-ai-ml-dl.html')">
+        <div class="card-num">02</div>
+        <div class="card-label">AI · ML · DL</div>
+        <div class="card-year">Temel</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#14B8A6" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/03-noron.html')">
+        <div class="card-num">03</div>
+        <div class="card-label">Nöron · McCulloch–Pitts</div>
+        <div class="card-year">1943</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#8B5CF6" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/05-ml-turleri.html')">
+        <div class="card-num">05</div>
+        <div class="card-label">ML Türleri</div>
+        <div class="card-year">1980</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#0EA5E9" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/06-gozetimli.html')">
+        <div class="card-num">06</div>
+        <div class="card-label">Gözetimli Öğrenme</div>
+        <div class="card-year">1980</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#F97316" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/07-gozetimsiz.html')">
+        <div class="card-num">07</div>
+        <div class="card-label">Gözetimsiz Öğrenme</div>
+        <div class="card-year">1980</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#FFD400" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/08-pekistirmeli.html')">
+        <div class="card-num">08</div>
+        <div class="card-label">Pekiştirmeli Öğrenme</div>
+        <div class="card-year">1980</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#22C55E" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/09-karar-agaclari.html')">
+        <div class="card-num">09</div>
+        <div class="card-label">Karar Ağaçları</div>
+        <div class="card-year">1984</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#EF4444" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/10-backprop.html')">
+        <div class="card-num">10</div>
+        <div class="card-label">Backpropagation</div>
+        <div class="card-year">1986</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#F59E0B" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/12-deeplearning.html')">
+        <div class="card-num">12</div>
+        <div class="card-label">Derin Öğrenme</div>
+        <div class="card-year">2012</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#A855F7" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/13-embedding.html')">
+        <div class="card-num">13</div>
+        <div class="card-label">Embedding · Word2Vec</div>
+        <div class="card-year">2013</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#EC4899" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/14-attention.html')">
+        <div class="card-num">14</div>
+        <div class="card-label">Attention Mekanizması</div>
+        <div class="card-year">2017</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#F97316" onclick="openSlide('1_Yapay_Zeka_Nasıl_Ogrenir/15-llm.html')">
+        <div class="card-num">15</div>
+        <div class="card-label">LLM · ChatGPT</div>
+        <div class="card-year">2022</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bölüm 2 -->
+  <div class="chapter-section fadeUp d4">
+    <div class="chapter-header">
+      <div class="chapter-badge" style="background:#A855F7;color:#fff">
+        <span>Bölüm 2</span>
+      </div>
+      <span class="chapter-name">Modeller & Kullanım</span>
+      <div class="chapter-rule"></div>
+      <span class="chapter-count">6 Slayt</span>
+    </div>
+    <div class="slide-grid">
+      <div class="slide-card cover-card" style="--ac:#A855F7" onclick="openSlide('2_Modeller_Kullanım/16-bolum2-kapak.html')">
+        <div class="card-num">16</div>
+        <div class="card-label">Bölüm 2 Kapak</div>
+        <div class="card-year">Ara Kapak</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#A855F7" onclick="openSlide('2_Modeller_Kullanım/17-model-haritasi.html')">
+        <div class="card-num">17</div>
+        <div class="card-label">Model Haritası</div>
+        <div class="card-year">Araçlar</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#6366F1" onclick="openSlide('2_Modeller_Kullanım/18-leaderboard.html')">
+        <div class="card-num">18</div>
+        <div class="card-label">Leaderboard</div>
+        <div class="card-year">Kıyaslama</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#EC4899" onclick="openSlide('2_Modeller_Kullanım/21-bagiam-prompt.html')">
+        <div class="card-num">21</div>
+        <div class="card-label">Bağlam & Prompt</div>
+        <div class="card-year">Teknik</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#F97316" onclick="openSlide('2_Modeller_Kullanım/22-ekip-arkadasi.html')">
+        <div class="card-num">22</div>
+        <div class="card-label">Knowledge Collapse</div>
+        <div class="card-year">Kullanım</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#3B82F6" onclick="openSlide('2_Modeller_Kullanım/20-araclar.html')">
+        <div class="card-num">20</div>
+        <div class="card-label">Yapay Zeka Modelleri</div>
+        <div class="card-year">Güncel</div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B&#246;l&#252;m 3 -->
+  <div class="chapter-section fadeUp d5">
+    <div class="chapter-header">
+      <div class="chapter-badge" style="background:#10B981;color:#fff">
+        <span>B&#246;l&#252;m 3</span>
+      </div>
+      <span class="chapter-name">Teknik Kullan&#305;m</span>
+      <div class="chapter-rule"></div>
+      <span class="chapter-count">8 Slayt</span>
+    </div>
+    <div class="slide-grid">
+      <div class="slide-card cover-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/23-bolum3-kapak.html')">
+        <div class="card-num">23</div><div class="card-label">B&#246;l&#252;m 3 Kapak</div><div class="card-year">Ara Kapak</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/24-ai-ideler.html')">
+        <div class="card-num">24</div><div class="card-label">AI IDE'ler</div><div class="card-year">Masa&#252;st&#252;</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/28-n8n.html')">
+        <div class="card-num">28</div><div class="card-label">n8n Otomasyon</div><div class="card-year">Workflow</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/29-uygulamalar.html')">
+        <div class="card-num">29</div><div class="card-label">Uygulamalar</div><div class="card-year">Demo</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/30-local-llm.html')">
+        <div class="card-num">30</div><div class="card-label">Yerel LLM</div><div class="card-year">Local</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/34-ft-vs-rag.html')">
+        <div class="card-num">34</div><div class="card-label">FT vs RAG</div><div class="card-year">Bilgi</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/35-kurumsal-ai.html')">
+        <div class="card-num">35</div><div class="card-label">Kurumsal AI</div><div class="card-year">Strateji</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="slide-card" style="--ac:#10B981" onclick="openSlide('3_Teknik_Kullan%C4%B1m/36-gelecek.html')">
+        <div class="card-num">36</div><div class="card-label">Gelecek</div><div class="card-year">2030</div><div class="card-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="index-foot fadeUp d5">
+    <span>Yapay Zeka Eğitimi</span>
+    <span>Tüm slaytlara tıklayarak ulaşabilirsin</span>
+  </div>
+
+</div><!-- #listing -->
+
+<script>
+const frame   = document.getElementById('slideFrame');
+const player  = document.getElementById('player');
+const closeBtn = document.getElementById('close-btn');
+const listing  = document.getElementById('listing');
+
+/* Slayt aç + otomatik tam ekrana gir */
+function openSlide(path) {
+  frame.src = path;
+  player.classList.add('active');
+  listing.style.display = 'none';
+  document.documentElement.requestFullscreen().catch(() => {});
+}
+
+/* İndekse dön */
+function closePlayer() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  player.classList.remove('active');
+  listing.style.display = '';
+  frame.src = '';
+}
+
+/* Tam ekrana gir/çık */
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+/* ESC ile tam ekrandan çıkınca SADECE tam ekran kapansın, slayt açık kalsın */
+document.addEventListener('fullscreenchange', () => {
+  updateCtxMenu();
+});
+
+/* Sağ tık menüsü */
+const ctxMenu = document.createElement('div');
+ctxMenu.id = 'ctx-menu';
+ctxMenu.style.cssText = 'display:none;position:fixed;z-index:9999;background:#fff;border:1.5px solid #0A0A0A;min-width:180px;box-shadow:4px 4px 0 rgba(0,0,0,.12);font-family:Inter,sans-serif;font-size:13px;';
+document.body.appendChild(ctxMenu);
+
+function updateCtxMenu() {
+  const isFS   = !!document.fullscreenElement;
+  const inPlay = player.classList.contains('active');
+  ctxMenu.innerHTML = '';
+
+  if (inPlay) {
+    addItem(isFS ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap', toggleFullscreen);
+    addItem('İndekse Dön', closePlayer);
+  } else {
+    addItem('Tam Ekran Yap', toggleFullscreen);
+  }
+}
+
+function addItem(label, fn) {
+  const el = document.createElement('div');
+  el.textContent = label;
+  el.style.cssText = 'padding:10px 16px;cursor:pointer;border-bottom:1px solid #eee;';
+  el.addEventListener('mouseenter', () => el.style.background = '#F3F4F6');
+  el.addEventListener('mouseleave', () => el.style.background = '');
+  el.addEventListener('click', () => { hideCtx(); fn(); });
+  ctxMenu.appendChild(el);
+}
+
+function hideCtx() { ctxMenu.style.display = 'none'; }
+
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  updateCtxMenu();
+  const x = Math.min(e.clientX, window.innerWidth  - ctxMenu.offsetWidth  - 8);
+  const y = Math.min(e.clientY, window.innerHeight - ctxMenu.offsetHeight - 8);
+  ctxMenu.style.left    = x + 'px';
+  ctxMenu.style.top     = y + 'px';
+  ctxMenu.style.display = 'block';
+});
+document.addEventListener('click',    hideCtx);
+document.addEventListener('keydown',  e => { if (e.key === 'Escape') hideCtx(); });
+
+/* Slayttan gelen mesajları işle */
+window.addEventListener('message', e => {
+  if (!e.data || typeof e.data !== 'object') return;
+  if (e.data.action === 'navigate' && e.data.file) frame.src = e.data.file;
+
+  /* Iframe içinden sağ tık → parent'ta menüyü aç */
+  if (e.data.action === 'iframeContextmenu') {
+    const r = frame.getBoundingClientRect();
+    updateCtxMenu();
+    ctxMenu.style.display = 'block';
+    const w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
+    const x = Math.min(r.left + e.data.x, window.innerWidth  - w - 8);
+    const y = Math.min(r.top  + e.data.y, window.innerHeight - h - 8);
+    ctxMenu.style.left = x + 'px';
+    ctxMenu.style.top  = y + 'px';
+  }
+  if (e.data.action === 'iframeClick') hideCtx();
+});
+</script>
+</body>
+</html>

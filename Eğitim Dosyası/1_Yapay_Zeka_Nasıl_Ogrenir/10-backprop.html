@@ -1,0 +1,474 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>09 · Backpropagation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#059669; --accent-soft:#D1FAE5; --warn:#DC2626; }
+
+/* Right viz */
+.right.bp {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px;
+  padding: 56px 36px 56px;
+}
+
+.example-card {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 16px 22px;
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+}
+.ex-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 8px;
+}
+.ex-sentence {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.blank {
+  display: inline-block;
+  min-width: 90px;
+  padding: 2px 10px;
+  background: var(--bg);
+  border: 1.5px dashed var(--ink);
+  color: var(--muted);
+  font-style: italic;
+  transition: all 0.5s;
+}
+.blank.correct {
+  background: var(--accent);
+  color: var(--paper);
+  border-style: solid;
+  font-style: normal;
+}
+
+.net-svg {
+  width: 100%;
+  max-width: 500px;
+  height: 180px;
+}
+.n-node {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  transition: all 0.4s;
+}
+.n-edge {
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.2;
+  transition: all 0.3s;
+}
+.anim-fwd {
+  stroke: var(--ink) !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 8;
+  animation: dash 0.5s linear infinite;
+  opacity: 1 !important;
+}
+.anim-bwd {
+  stroke: var(--warn) !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 8;
+  animation: dash-rev 0.5s linear infinite;
+  opacity: 1 !important;
+}
+.node-learned {
+  fill: var(--accent) !important;
+  stroke: var(--ink) !important;
+  stroke-width: 2 !important;
+}
+@keyframes dash { to { stroke-dashoffset: -16; } }
+@keyframes dash-rev { to { stroke-dashoffset: 16; } }
+
+.pred-row {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; max-width: 500px;
+}
+.pred-box {
+  flex: 1;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 12px 14px;
+  text-align: center;
+  transition: all 0.5s;
+}
+.wrong-box {
+  border-color: var(--warn);
+  background: #FFF1F2;
+}
+.wrong-box.correct-box {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.right-box {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.pred-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 4px;
+}
+.pred-word {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--warn);
+  transition: color 0.5s;
+}
+.pred-conf {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  transition: color 0.5s;
+  font-family: 'JetBrains Mono', monospace;
+}
+.pred-vs {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--warn);
+  transition: color 0.5s;
+  flex-shrink: 0;
+}
+
+.metric-row {
+  display: flex; gap: 14px;
+  width: 100%; max-width: 500px;
+}
+.metric-box {
+  flex: 1;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 12px 14px;
+  text-align: center;
+}
+.m-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 4px;
+}
+.m-val {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--warn);
+  transition: color 0.5s;
+}
+.m-val.good { color: var(--accent); }
+
+.status-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  min-height: 16px;
+  max-width: 480px;
+  line-height: 1.55;
+}
+
+.btn-train {
+  padding: 14px 28px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: 0.15s;
+}
+.btn-train:hover { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn-train:disabled { background: var(--bg); color: var(--muted-2); border-color: var(--line-soft); cursor: not-allowed; }
+.btn-train svg { width: 14px; height: 14px; }
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">8</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">09</span>
+        <span>Backpropagation</span>
+        <span class="dash"></span>
+        <span>1986</span>
+      </div>
+      <h1 class="fadeUp d2">Hatadan<br><span class="hl">ders alan</span> algoritma.</h1>
+      <p class="lede fadeUp d3">
+        Nöron ağları ağırlıklarını nasıl bulur? Her tahminden sonra hatayı ölçer,
+        o hatayı <strong>geriye doğru yayar</strong> ve her ağırlığı bir miktar düzeltir.
+        Binlerce kez tekrarlanır — her seferinde biraz daha iyi.
+      </p>
+
+      <div class="cards">
+        <div class="card fadeUp d4">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          <div>
+            <h3>İleri Yayılım</h3>
+            <p>Girdi ağdan geçer, model bir <strong>tahmin</strong> üretir.</p>
+          </div>
+        </div>
+        <div class="card alt fadeUp d4">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+          <div>
+            <h3>Geri Yayılım</h3>
+            <p>Hata geriye akar, ağırlıklar <strong>azaltacak</strong> şekilde güncellenir.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="09-karar-agaclari.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="12-deeplearning.html" class="primary">Derin Öğrenme<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">09 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right bp">
+    <div class="viz-head"><span class="dot"></span><span>4 Epoch'ta öğrenme</span></div>
+
+    <div class="example-card">
+      <div class="ex-meta">EĞİTİM VERİSİ · milyarlarca cümleden biri</div>
+      <div class="ex-sentence">Ankara, Türkiye'nin <span class="blank" id="blank-word">___</span></div>
+    </div>
+
+    <svg class="net-svg" viewBox="0 0 560 220">
+      <g id="edges"></g>
+      <g id="nodes"></g>
+    </svg>
+
+    <div class="pred-row">
+      <div class="pred-box wrong-box">
+        <div class="pred-lbl">MODEL TAHMİNİ</div>
+        <div class="pred-word" id="pred-word">şehri</div>
+        <div class="pred-conf" id="pred-conf">güven: %12</div>
+      </div>
+      <div class="pred-vs" id="pred-vs">✗</div>
+      <div class="pred-box right-box">
+        <div class="pred-lbl">DOĞRU CEVAP</div>
+        <div class="pred-word" style="color:var(--accent);">başkenti</div>
+        <div class="pred-conf" style="color:var(--accent);">hedef</div>
+      </div>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric-box">
+        <div class="m-title">Hata (Loss)</div>
+        <div class="m-val" id="loss-val">%85.4</div>
+      </div>
+      <div class="metric-box">
+        <div class="m-title">Epoch</div>
+        <div class="m-val" id="epoch-val" style="color:var(--ink);">0 / 4</div>
+      </div>
+    </div>
+
+    <div id="status" class="status-text">Eğitime başlamak için butona tıklayın.</div>
+
+    <button id="trainBtn" class="btn-train" onclick="runEpoch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+      1 Epoch Eğit
+    </button>
+  </section>
+</div>
+
+<script>
+const LAYERS = [
+  { count: 3, x: 80 },
+  { count: 5, x: 280 },
+  { count: 2, x: 480 }
+];
+const H = 220;
+const nodesEl = document.getElementById('nodes');
+const edgesEl = document.getElementById('edges');
+const edgePaths = [];
+const nodeCircles = [];
+
+function initNet(){
+  const coords = [];
+  LAYERS.forEach(layer => {
+    const spacing = H / (layer.count + 1);
+    const col = [];
+    for (let i=0; i<layer.count; i++) col.push({ x: layer.x, y: spacing*(i+1) });
+    coords.push(col);
+  });
+  for (let l=0; l<coords.length-1; l++){
+    coords[l].forEach(n1 => {
+      coords[l+1].forEach(n2 => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1', n1.x); line.setAttribute('y1', n1.y);
+        line.setAttribute('x2', n2.x); line.setAttribute('y2', n2.y);
+        line.setAttribute('class','n-edge');
+        edgesEl.appendChild(line);
+        edgePaths.push(line);
+      });
+    });
+  }
+  coords.forEach(col => col.forEach(n => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y);
+    c.setAttribute('r', 12);
+    c.setAttribute('class','n-node');
+    nodesEl.appendChild(c);
+    nodeCircles.push(c);
+  }));
+}
+initNet();
+
+let epoch = 0;
+const losses = ['%85.4','%62.1','%34.8','%12.5','%2.1'];
+const preds = [
+  { word:'şehri',     conf:'güven: %12', color:'var(--warn)' },
+  { word:'kenti',     conf:'güven: %31', color:'#D97706' },
+  { word:'başkenti',  conf:'güven: %58', color:'#CA8A04' },
+  { word:'başkenti',  conf:'güven: %81', color:'#65A30D' },
+  { word:'başkenti',  conf:'güven: %97', color:'var(--accent)' },
+];
+
+function updatePred(idx){
+  const p = preds[idx];
+  const pw  = document.getElementById('pred-word');
+  const pc  = document.getElementById('pred-conf');
+  const pvs = document.getElementById('pred-vs');
+  const wb  = document.querySelector('.wrong-box');
+  const bl  = document.getElementById('blank-word');
+  pw.textContent = p.word;
+  pw.style.color = p.color;
+  pc.style.color = p.color;
+  pc.textContent = p.conf;
+  if (idx === 4){
+    pvs.textContent = '✓';
+    pvs.style.color = 'var(--accent)';
+    wb.classList.add('correct-box');
+    wb.classList.remove('wrong-box');
+    bl.textContent = 'başkenti';
+    bl.classList.add('correct');
+  }
+}
+
+function runEpoch(){
+  if (epoch >= 4) return;
+  const btn = document.getElementById('trainBtn');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+
+  status.textContent = '→ İleri Yayılım: cümle ağdan geçiyor…';
+  edgePaths.forEach(e => e.classList.add('anim-fwd'));
+
+  setTimeout(() => {
+    const nextLoss = losses[epoch + 1];
+    status.textContent = `⚡ Hata: ${nextLoss} — model "${preds[epoch].word}" dedi, doğrusu "başkenti".`;
+    edgePaths.forEach(e => e.classList.remove('anim-fwd'));
+    document.getElementById('loss-val').textContent = nextLoss;
+
+    setTimeout(() => {
+      status.textContent = '← Geri Yayılım: hata sinyali geri akıyor, ağırlıklar güncelleniyor…';
+      edgePaths.forEach(e => e.classList.add('anim-bwd'));
+
+      setTimeout(() => {
+        edgePaths.forEach((e, idx) => {
+          e.classList.remove('anim-bwd');
+          e.style.opacity = String(0.2 + (epoch + 1) * 0.18);
+          e.style.strokeWidth = String(1 + (epoch + 1) * 0.4);
+        });
+        epoch++;
+        document.getElementById('epoch-val').textContent = `${epoch} / 4`;
+        updatePred(epoch);
+        if (epoch >= 4){
+          status.textContent = '✓ Eğitim tamamlandı. Model "başkenti" kelimesini %97 güvenle öğrendi.';
+          document.getElementById('loss-val').classList.add('good');
+          nodeCircles.forEach(n => n.classList.add('node-learned'));
+        } else {
+          status.textContent = `Epoch ${epoch}/4 tamamlandı — tahmin iyileşiyor.`;
+          btn.disabled = false;
+        }
+      }, 1300);
+    }, 1100);
+  }, 1300);
+}
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '10-backprop.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '12-deeplearning.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '09-karar-agaclari.html';
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

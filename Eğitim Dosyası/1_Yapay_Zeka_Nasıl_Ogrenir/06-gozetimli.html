@@ -1,0 +1,387 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>05 · Gözetimli Öğrenme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#1D4ED8; }
+
+.concept-box {
+  padding: 16px 18px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.concept-box:hover { background: var(--line-soft-2); }
+.concept-box.active { background: var(--ink); color: var(--paper); }
+.concept-box.active .c-ico { background: var(--accent); color: var(--paper); }
+.concept-box.active h3 { color: var(--paper); }
+.concept-box.active p { color: rgba(255,255,255,0.8); }
+.c-ico {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  background: var(--accent);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+}
+.c-ico svg { width: 18px; height: 18px; }
+.concept-box h3 {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.concept-box p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+
+.boxes { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
+/* Right viz */
+.right.gz { padding: 0; }
+.viz-stage.bordered { width: min(580px, 92%); aspect-ratio: 1.05/1; }
+.viz-container {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s;
+  padding: 36px;
+}
+.viz-container.active { opacity: 1; pointer-events: auto; }
+
+/* axes */
+.axis {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.axis.x { bottom: 8px; right: 12px; }
+.axis.y { top: 12px; left: 12px; writing-mode: vertical-rl; transform: rotate(180deg); }
+.viz-stage.bordered::before, .viz-stage.bordered::after {
+  content: ""; position: absolute; background: var(--line-soft);
+}
+.viz-stage.bordered::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+.viz-stage.bordered::after { top: 50%; left: 0; right: 0; height: 1px; }
+
+#points-container { position: absolute; inset: 0; }
+.point {
+  position: absolute;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  transition: all 0.4s;
+}
+.point.red  { background: var(--accent); }
+.point.blue { background: #FFFFFF; }
+.boundary-line {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 92%;
+  height: 2px;
+  background: var(--ink);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  z-index: 4;
+}
+
+/* Regression chart */
+.reg-chart {
+  width: 70%; height: 60%;
+  position: relative;
+  border-left: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  z-index: 5;
+}
+.reg-point {
+  position: absolute;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 1.5px solid var(--ink);
+  margin-left: -4.5px;
+  margin-bottom: -4.5px;
+}
+.trend-line {
+  position: absolute;
+  bottom: 8%;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left bottom;
+  transform: rotate(-32deg);
+}
+.axis-label {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.y-axis { left: -54px; top: 50%; transform: rotate(-90deg) translateY(-50%); transform-origin: left top; white-space: nowrap; }
+.x-axis { bottom: -22px; left: 50%; transform: translateX(-50%); }
+
+/* Test panel */
+.test-ui {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 14px;
+  z-index: 20;
+  width: 220px;
+}
+.test-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.test-desc {
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.btn-action {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1.5px solid var(--ink);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-action:hover { background: var(--accent); border-color: var(--accent); }
+.test-result {
+  margin-top: 8px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  min-height: 16px;
+  color: var(--ink);
+}
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">4</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">05</span>
+        <span>Gözetimli Öğrenme</span>
+        <span class="dash"></span>
+        <span>1980</span>
+      </div>
+      <h1 class="fadeUp d2">Cevabı bilerek<br><span class="hl">öğrenmek</span>.</h1>
+      <p class="lede fadeUp d3">
+        Makineye <strong>doğru cevapları önceden işaretlenmiş</strong> örnekler gösterirsin,
+        o da kalıbı kendi çıkarır. İki farklı problem tipi vardır:
+      </p>
+
+      <div class="boxes fadeUp d4">
+        <div id="box-cls" class="concept-box active" onclick="showViz('cls')">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div>
+            <h3>1 · Sınıflandırma</h3>
+            <p>Sonuç kategoriktir. "Bu spam mı?" — model bir karar sınırı çizer ve verileri sınıflara ayırır.</p>
+          </div>
+        </div>
+        <div id="box-reg" class="concept-box" onclick="showViz('reg')">
+          <div class="c-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div>
+            <h3>2 · Regresyon</h3>
+            <p>Sonuç sayısaldır. "Bu daire kaç TL?" — geçmiş verilerden trend çizgisi oluşturur ve tahmin yapar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="05-ml-turleri.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="07-gozetimsiz.html" class="primary">Gözetimsiz<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">05 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right gz">
+    <div class="viz-head"><span class="dot"></span><span id="vizLabel">Sınıflandırma · Karar Sınırı</span></div>
+
+    <div class="viz-stage bordered" id="stage">
+      <span class="axis x">Özellik · A</span>
+      <span class="axis y">Özellik · B</span>
+
+      <!-- CLASSIFICATION -->
+      <div id="viz-cls" class="viz-container active">
+        <div id="points-container"></div>
+        <div class="boundary-line"></div>
+        <div class="test-ui">
+          <div class="test-title">Sınıflandırma</div>
+          <div class="test-desc">Model, iki sınıfı (mavi/beyaz) ayıran karar sınırı çizer.</div>
+          <button class="btn-action" onclick="testClassification()">Yeni Veri Ver</button>
+          <div id="cls-result" class="test-result"></div>
+        </div>
+      </div>
+
+      <!-- REGRESSION -->
+      <div id="viz-reg" class="viz-container">
+        <div class="reg-chart">
+          <div class="axis-label y-axis">FİYAT (M ₺)</div>
+          <div class="axis-label x-axis">BÜYÜKLÜK (m²)</div>
+          <div class="reg-point" style="left:10%; bottom:15%;"></div>
+          <div class="reg-point" style="left:20%; bottom:12%;"></div>
+          <div class="reg-point" style="left:25%; bottom:25%;"></div>
+          <div class="reg-point" style="left:35%; bottom:28%;"></div>
+          <div class="reg-point" style="left:45%; bottom:42%;"></div>
+          <div class="reg-point" style="left:55%; bottom:38%;"></div>
+          <div class="reg-point" style="left:65%; bottom:55%;"></div>
+          <div class="reg-point" style="left:80%; bottom:62%;"></div>
+          <div class="reg-point" style="left:90%; bottom:80%;"></div>
+          <div class="trend-line"></div>
+          <div id="new-reg-point" class="reg-point" style="display:none; background:var(--accent); width:13px; height:13px; border-color:var(--accent); transition:all 0.5s; z-index:10;"></div>
+        </div>
+        <div class="test-ui">
+          <div class="test-title">Regresyon</div>
+          <div class="test-desc">Geçmiş verileri baz alan model, trend çizgisi çizip tahmin yapar.</div>
+          <button class="btn-action" onclick="testRegression()">Tahmin: 150m²</button>
+          <div id="reg-result" class="test-result"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const pointsContainer = document.getElementById('points-container');
+const SEED = (() => { let s = 99; return () => (s = (s*9301+49297) % 233280) / 233280; })();
+for (let i=0; i<32; i++){
+  const p = document.createElement('div');
+  p.className = 'point red';
+  p.style.left = (15 + SEED()*30) + '%';
+  p.style.top  = (15 + SEED()*35) + '%';
+  pointsContainer.appendChild(p);
+  const p2 = document.createElement('div');
+  p2.className = 'point blue';
+  p2.style.left = (55 + SEED()*30) + '%';
+  p2.style.top  = (55 + SEED()*35) + '%';
+  pointsContainer.appendChild(p2);
+}
+
+function showViz(type){
+  document.getElementById('viz-cls').classList.remove('active');
+  document.getElementById('viz-reg').classList.remove('active');
+  document.getElementById('box-cls').classList.remove('active');
+  document.getElementById('box-reg').classList.remove('active');
+  document.getElementById('viz-'+type).classList.add('active');
+  document.getElementById('box-'+type).classList.add('active');
+  document.getElementById('vizLabel').textContent =
+    type==='cls' ? 'Sınıflandırma · Karar Sınırı' : 'Regresyon · Trend Çizgisi';
+}
+
+function testClassification(){
+  const isRedSide = Math.random() > 0.5;
+  const t = document.createElement('div');
+  t.className = 'point';
+  t.style.background = 'var(--accent)';
+  t.style.borderStyle = 'dashed';
+  t.style.left = '50%'; t.style.top = '10%';
+  t.style.width = '15px'; t.style.height = '15px';
+  pointsContainer.appendChild(t);
+  setTimeout(() => {
+    t.style.top  = isRedSide ? '30%' : '70%';
+    t.style.left = isRedSide ? '30%' : '70%';
+  }, 100);
+  setTimeout(() => {
+    t.style.background = isRedSide ? 'var(--accent)' : '#FFFFFF';
+    t.style.borderStyle = 'solid';
+    document.getElementById('cls-result').textContent = isRedSide ? '→ Sınıf A' : '→ Sınıf B';
+  }, 600);
+}
+
+function testRegression(){
+  const rp = document.getElementById('new-reg-point');
+  rp.style.display = 'block';
+  rp.style.left = '0%'; rp.style.bottom = '0%';
+  setTimeout(() => { rp.style.left = '75%'; rp.style.bottom = '58%'; }, 100);
+  setTimeout(() => {
+    document.getElementById('reg-result').textContent = '→ 3.450.000 ₺';
+  }, 650);
+}
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '06-gozetimli.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '07-gozetimsiz.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '05-ml-turleri.html';
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

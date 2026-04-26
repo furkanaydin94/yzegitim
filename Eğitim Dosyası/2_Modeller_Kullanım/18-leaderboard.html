@@ -1,0 +1,533 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18 · Sıralama & Kullanım</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter2-theme.css">
+<style>
+:root { --accent: #F59E0B; --accent-soft: #FEF3C7; }
+
+/* Override right for scroll */
+.right {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px 20px 20px;
+  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-soft) transparent;
+}
+.right::-webkit-scrollbar { width: 4px; }
+.right::-webkit-scrollbar-thumb { background: var(--line-soft); }
+.right > * { flex-shrink: 0; }
+
+/* Tabs */
+.tab-group { display: flex; flex-direction: column; gap: 8px; }
+.tab-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  border: 1.5px solid var(--line-soft);
+  background: var(--paper);
+  cursor: pointer; transition: all 0.2s; text-align: left;
+}
+.tab-btn:hover { border-color: var(--ink); }
+.tab-btn.active-arena { border-color: var(--accent); background: var(--accent-soft); }
+.tab-btn.active-or { border-color: #6366F1; background: #EEF2FF; }
+.tab-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; border: 1.5px solid var(--line-soft); }
+.tab-title {
+  font-family: 'Inter Tight', sans-serif; font-size: 12px; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.tab-title.arena { color: #D97706; }
+.tab-title.or { color: #4F46E5; }
+.tab-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* View */
+.view { display: none; flex-direction: column; gap: 12px; }
+.view.visible { display: flex; }
+
+/* Sub-tabs */
+.arena-sub-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+.sub-tab {
+  font-family: 'Inter Tight', sans-serif;
+  padding: 5px 12px; border: 1.5px solid var(--line-soft); background: var(--paper);
+  color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.sub-tab:hover { border-color: var(--ink); color: var(--ink); }
+.sub-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.arena-sub-view { display: none; flex-direction: column; gap: 10px; }
+.arena-sub-view.visible { display: flex; }
+
+/* Table label */
+.table-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.table-label a { color: var(--accent); text-decoration: none; opacity: 0.8; }
+.table-label a:hover { opacity: 1; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 1.5px solid var(--ink); }
+.arena-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.arena-table th {
+  padding: 9px 10px; text-align: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  background: var(--bg); border-bottom: 1.5px solid var(--ink);
+  white-space: nowrap; position: sticky; top: 0; z-index: 2;
+}
+.arena-table th:first-child { text-align: left; padding-left: 12px; }
+.arena-table td {
+  padding: 8px 10px; text-align: center;
+  border-bottom: 1px solid var(--line-soft); transition: background 0.12s; white-space: nowrap;
+}
+.arena-table td:first-child { text-align: left; padding-left: 12px; }
+.arena-table tr:hover td { background: rgba(0,0,0,0.03); }
+.arena-table tr:last-child td { border-bottom: none; }
+
+.rank-cell { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; color: var(--ink); }
+.rank-1 { color: #D97706; }
+.rank-2 { color: #525252; }
+.rank-3 { color: #92400E; }
+.rank-good {
+  font-family: 'JetBrains Mono', monospace; color: #059669;
+  background: #D1FAE5; padding: 2px 6px; font-size: 11px; font-weight: 700;
+}
+.rank-mid {
+  font-family: 'JetBrains Mono', monospace; color: #D97706;
+  background: #FEF3C7; padding: 2px 6px; font-size: 11px; font-weight: 700;
+}
+.rank-low {
+  font-family: 'JetBrains Mono', monospace; color: #DC2626;
+  background: #FEE2E2; padding: 2px 6px; font-size: 11px; font-weight: 700;
+}
+.model-name { font-size: 12px; color: var(--ink); max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.model-badge {
+  display: inline-flex; align-items: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  padding: 1px 5px; margin-left: 4px; letter-spacing: 0.06em;
+}
+.badge-a { background: #FEF3C7; color: #D97706; }
+.badge-g { background: #DBEAFE; color: #1D4ED8; }
+.badge-m { background: #D1FAE5; color: #059669; }
+.badge-o { background: #ECFDF5; color: #059669; }
+.badge-x { background: #EDE9FE; color: #7C3AED; }
+.badge-cn { background: #FEE2E2; color: #DC2626; }
+
+.elo-score { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; color: var(--ink); }
+.elo-top { color: #D97706; }
+.vote-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+.cn-row td { background: rgba(220,38,38,0.04) !important; }
+.cn-row:hover td { background: rgba(220,38,38,0.07) !important; }
+.cn-model { font-size: 12px; color: #DC2626; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.table-footer { font-size: 10.5px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; }
+
+/* OpenRouter */
+.or-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.or-table th {
+  padding: 9px 10px; text-align: left;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  background: var(--bg); border-bottom: 1.5px solid var(--ink);
+  white-space: nowrap; position: sticky; top: 0; z-index: 2;
+}
+.or-table th.or-num { text-align: right; }
+.or-table td { padding: 9px 10px; border-bottom: 1px solid var(--line-soft); transition: background 0.12s; vertical-align: middle; }
+.or-table tr:last-child td { border-bottom: none; }
+.or-table tr:hover td { background: rgba(0,0,0,0.03); }
+.or-rank { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; text-align: center; }
+.or-model { font-size: 13px; font-weight: 700; color: var(--ink); }
+.or-company { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+.or-tokens { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #0369A1; text-align: right; }
+.or-bar-wrap { width: 56px; height: 4px; background: var(--line-soft); margin-left: auto; margin-top: 4px; }
+.or-bar-fill { height: 100%; }
+.price-in { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #059669; display: block; text-align: right; }
+.price-out { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #D97706; display: block; text-align: right; }
+
+.cn-or td { background: rgba(220,38,38,0.04) !important; }
+.cn-or:hover td { background: rgba(220,38,38,0.08) !important; }
+.us-or td { background: rgba(99,102,241,0.03) !important; }
+.us-or:hover td { background: rgba(99,102,241,0.06) !important; }
+.open-or td { background: rgba(34,197,94,0.03) !important; }
+.open-or:hover td { background: rgba(34,197,94,0.06) !important; }
+
+/* Chart block */
+.chart-block {
+  border: 1.5px solid var(--ink); background: var(--paper); padding: 18px 20px;
+}
+.chart-block-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.chart-block-title .badge-pill {
+  font-family: 'Inter Tight', sans-serif; font-size: 10px; font-weight: 800;
+  background: var(--ink); color: var(--paper); padding: 2px 10px; letter-spacing: 0.06em;
+}
+.bar-chart { display: flex; align-items: flex-end; gap: 2px; height: 80px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+.bar { width: 100%; min-height: 3px; transition: opacity 0.2s; }
+.bar:hover { opacity: 0.7; }
+.bar-lbl { font-size: 9px; color: var(--muted-2); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.chart-note { font-size: 11px; color: var(--muted-2); margin-top: 8px; }
+.chart-note a { color: var(--accent); text-decoration: none; }
+
+/* Insight box */
+.insight-box {
+  border: 1.5px solid var(--ink); background: var(--paper);
+  padding: 16px 20px; font-size: 13.5px; color: var(--ink-2); line-height: 1.65;
+  position: relative;
+}
+.insight-box::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: #0EA5E9;
+}
+.insight-box strong { color: var(--ink); font-weight: 700; }
+
+/* Legend */
+.legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 8px; height: 8px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- TOP TIMELINE -->
+<nav class="htl" id="htl">
+  <div class="htl-label">Bölüm 2<b>Sıralama</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">4</b> / 7</div>
+</nav>
+
+<div class="slide">
+
+  <!-- LEFT -->
+  <div class="left fadeUp">
+    <div>
+      <div class="eyebrow d1">
+        <span class="num">18</span>
+        <span>Bölüm 2 · Sıralama & Kullanım</span>
+      </div>
+      <h1 class="d2" style="margin-top:20px;">Sıralama<br>&amp;<br><span class="hl">Kullanım.</span></h1>
+    </div>
+
+    <p class="lede d3">
+      <strong>Arena.ai</strong> kör testlerle insan tercihini ölçer. <strong>OpenRouter</strong> gerçek API trafiğini gösterir.
+      İkisi birlikte okunmalı: tercih edilen her zaman en çok kullanılan değildir — maliyet ve erişilebilirlik belirleyicidir.
+    </p>
+
+    <div class="tab-group d4" style="animation-delay:.2s;">
+      <div class="tab-btn active-arena" id="tab-arena" onclick="showView('arena')">
+        <div class="tab-icon">🏆</div>
+        <div>
+          <div class="tab-title arena">Arena.ai — Sıralama</div>
+          <div class="tab-sub">Kör test · 5,4M insan oyu · Elo puanı</div>
+        </div>
+      </div>
+      <div class="tab-btn" id="tab-or" onclick="showView('or')">
+        <div class="tab-icon">📊</div>
+        <div>
+          <div class="tab-title or">OpenRouter — Kullanım</div>
+          <div class="tab-sub">Gerçek API trafiği · Token hacmi · Fiyat</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot d5" style="animation-delay:.28s;">
+      <div class="nav">
+        <a href="17-model-haritasi.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Geri
+        </a>
+        <a href="21-bagiam-prompt.html" class="primary">
+          Prompt
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+      <span class="pageno">18 / 22</span>
+    </div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="divider" id="divider"></div>
+
+  <!-- RIGHT -->
+  <div class="right" id="rightPanel">
+
+    <!-- ═══ ARENA ═══ -->
+    <div class="view visible" id="view-arena">
+      <div class="arena-sub-tabs">
+        <button class="sub-tab active" id="st-genel"  onclick="showArena('genel')">📋 Genel</button>
+        <button class="sub-tab" id="st-metin"  onclick="showArena('metin')">📝 Metin</button>
+        <button class="sub-tab" id="st-kod"    onclick="showArena('kod')">💻 Kod</button>
+        <button class="sub-tab" id="st-mat"    onclick="showArena('mat')">🔢 Matematik</button>
+        <button class="sub-tab" id="st-img"    onclick="showArena('img')">🖼️ Görsel</button>
+        <button class="sub-tab" id="st-vid"    onclick="showArena('vid')">🎬 Video</button>
+      </div>
+
+      <!-- Genel -->
+      <div class="arena-sub-view visible" id="arena-genel">
+        <div class="table-label">Arena.ai — Genel Sıralama · Nisan 2026 &nbsp;<a href="https://arena.ai/leaderboard" target="_blank">↗ arena.ai</a></div>
+        <div class="table-wrap">
+          <table class="arena-table">
+            <thead><tr>
+              <th style="text-align:left;">Model</th><th>Genel</th><th>Uzman</th><th>Zor</th><th>Kod</th><th>Mat.</th><th>Yaratıcı</th><th>Talimat</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><span class="model-name">claude-opus-4-7-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="rank-cell rank-1">1</span></td><td><span class="rank-good">1</span></td><td><span class="rank-good">3</span></td><td><span class="rank-good">1</span></td><td><span class="rank-mid">5</span></td><td><span class="rank-good">1</span></td><td><span class="rank-good">2</span></td></tr>
+              <tr><td><span class="model-name">claude-opus-4-6-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="rank-cell rank-2">2</span></td><td><span class="rank-good">4</span></td><td><span class="rank-good">1</span></td><td><span class="rank-good">3</span></td><td><span class="rank-good">2</span></td><td><span class="rank-good">2</span></td><td><span class="rank-good">1</span></td></tr>
+              <tr><td><span class="model-name">claude-opus-4-7</span><span class="model-badge badge-a">A</span></td><td><span class="rank-cell rank-3">3</span></td><td><span class="rank-good">3</span></td><td><span class="rank-good">4</span></td><td><span class="rank-good">2</span></td><td><span class="rank-mid">9</span></td><td><span class="rank-good">3</span></td><td><span class="rank-good">3</span></td></tr>
+              <tr><td><span class="model-name">claude-opus-4-6</span><span class="model-badge badge-a">A</span></td><td><span class="rank-mid">4</span></td><td><span class="rank-good">2</span></td><td><span class="rank-good">2</span></td><td><span class="rank-good">4</span></td><td><span class="rank-good">4</span></td><td><span class="rank-mid">6</span></td><td><span class="rank-good">4</span></td></tr>
+              <tr><td><span class="model-name">muse-spark</span><span class="model-badge badge-m">M</span></td><td><span class="rank-mid">5</span></td><td><span class="rank-low">25</span></td><td><span class="rank-mid">6</span></td><td><span class="rank-mid">6</span></td><td><span class="rank-low">21</span></td><td><span class="rank-mid">9</span></td><td><span class="rank-low">11</span></td></tr>
+              <tr><td><span class="model-name">gemini-3.1-pro-preview</span><span class="model-badge badge-g">G</span></td><td><span class="rank-mid">6</span></td><td><span class="rank-mid">6</span></td><td><span class="rank-mid">5</span></td><td><span class="rank-mid">8</span></td><td><span class="rank-good">3</span></td><td><span class="rank-good">4</span></td><td><span class="rank-mid">5</span></td></tr>
+              <tr><td><span class="model-name">gemini-3-pro</span><span class="model-badge badge-g">G</span></td><td><span class="rank-mid">7</span></td><td><span class="rank-low">13</span></td><td><span class="rank-mid">8</span></td><td><span class="rank-low">11</span></td><td><span class="rank-mid">8</span></td><td><span class="rank-mid">5</span></td><td><span class="rank-mid">10</span></td></tr>
+              <tr><td><span class="model-name">grok-4.20-beta1</span><span class="model-badge badge-x">X</span></td><td><span class="rank-mid">8</span></td><td><span class="rank-low">34</span></td><td><span class="rank-low">13</span></td><td><span class="rank-low">17</span></td><td><span class="rank-low">24</span></td><td><span class="rank-mid">7</span></td><td><span class="rank-low">19</span></td></tr>
+              <tr><td><span class="model-name">gpt-5.4-high</span><span class="model-badge badge-o">O</span></td><td><span class="rank-mid">9</span></td><td><span class="rank-mid">5</span></td><td><span class="rank-mid">7</span></td><td><span class="rank-good">5</span></td><td><span class="rank-good">1</span></td><td><span class="rank-low">14</span></td><td><span class="rank-mid">7</span></td></tr>
+              <tr><td><span class="model-name">gpt-5.2-chat-latest</span><span class="model-badge badge-o">O</span></td><td><span class="rank-low">11</span></td><td><span class="rank-low">26</span></td><td><span class="rank-low">12</span></td><td><span class="rank-low">12</span></td><td><span class="rank-low">20</span></td><td><span class="rank-low">26</span></td><td><span class="rank-low">18</span></td></tr>
+              <tr class="cn-row"><td><span class="cn-model">glm-5.1 🇨🇳 🔓</span><span class="model-badge badge-cn">ZHIPU</span></td><td class="rank-low">16</td><td class="rank-low">19</td><td class="rank-low">18</td><td class="rank-low">16</td><td class="rank-low">11</td><td class="rank-low">12</td><td class="rank-low">15</td></tr>
+              <tr class="cn-row"><td><span class="cn-model">qwen3.5-max-preview 🇨🇳 🔓</span><span class="model-badge badge-cn">ALIBABA</span></td><td class="rank-low">19</td><td class="rank-mid">8</td><td class="rank-low">16</td><td class="rank-low">24</td><td class="rank-low">13</td><td class="rank-low">20</td><td class="rank-low">12</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span>🇨🇳 Çinli modeller · 🔓 Açık kaynak</span>
+          <span>A=Anthropic · G=Google · M=Meta · O=OpenAI · X=xAI</span>
+          <span>Sayılar: sıra (düşük = iyi)</span>
+        </div>
+      </div>
+
+      <!-- Metin -->
+      <div class="arena-sub-view" id="arena-metin">
+        <div class="table-label">Arena.ai · Metin — Elo Puanları · Nisan 2026 &nbsp;<a href="https://arena.ai/leaderboard" target="_blank">↗</a></div>
+        <div class="table-wrap">
+          <table class="arena-table">
+            <thead><tr><th>#</th><th style="text-align:left;">Model</th><th>Elo</th></tr></thead>
+            <tbody>
+              <tr><td><span class="rank-cell rank-1">1</span></td><td><span class="model-name">claude-opus-4-7-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score elo-top">1504</span></td></tr>
+              <tr><td><span class="rank-cell rank-2">2</span></td><td><span class="model-name">claude-opus-4-6-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score elo-top">1502</span></td></tr>
+              <tr><td><span class="rank-cell rank-3">3</span></td><td><span class="model-name">claude-opus-4-7</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1497</span></td></tr>
+              <tr><td><span class="rank-cell">4</span></td><td><span class="model-name">claude-opus-4-6</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1496</span></td></tr>
+              <tr><td><span class="rank-cell">5</span></td><td><span class="model-name">muse-spark</span><span class="model-badge badge-m">M</span></td><td><span class="elo-score">1493</span></td></tr>
+              <tr><td><span class="rank-cell">6</span></td><td><span class="model-name">gemini-3.1-pro-preview</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1493</span></td></tr>
+              <tr><td><span class="rank-cell">7</span></td><td><span class="model-name">gemini-3-pro</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1486</span></td></tr>
+              <tr><td><span class="rank-cell">8</span></td><td><span class="model-name">grok-4.20-beta1</span><span class="model-badge badge-x">X</span></td><td><span class="elo-score">1482</span></td></tr>
+              <tr><td><span class="rank-cell">9</span></td><td><span class="model-name">gpt-5.4-high</span><span class="model-badge badge-o">O</span></td><td><span class="elo-score">1482</span></td></tr>
+              <tr><td><span class="rank-cell">10</span></td><td><span class="model-name">grok-4.20-beta-0309-reasoning</span><span class="model-badge badge-x">X</span></td><td><span class="elo-score">1480</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Kod -->
+      <div class="arena-sub-view" id="arena-kod">
+        <div class="table-label">Arena.ai · Kod — Elo &nbsp;<a href="https://arena.ai/leaderboard" target="_blank">↗</a></div>
+        <div class="table-wrap">
+          <table class="arena-table">
+            <thead><tr><th>#</th><th style="text-align:left;">Model</th><th>Elo</th></tr></thead>
+            <tbody>
+              <tr><td><span class="rank-cell rank-1">1</span></td><td><span class="model-name">claude-opus-4-7-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score elo-top">1576</span></td></tr>
+              <tr><td><span class="rank-cell rank-2">2</span></td><td><span class="model-name">claude-opus-4-7</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score elo-top">1569</span></td></tr>
+              <tr><td><span class="rank-cell rank-3">3</span></td><td><span class="model-name">claude-opus-4-6-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score elo-top">1549</span></td></tr>
+              <tr><td><span class="rank-cell">4</span></td><td><span class="model-name">claude-opus-4-6</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1544</span></td></tr>
+              <tr class="cn-row"><td><span class="rank-cell">5</span></td><td><span class="cn-model">glm-5.1 🇨🇳</span><span class="model-badge badge-cn">ZHIPU</span></td><td><span class="elo-score">1536</span></td></tr>
+              <tr><td><span class="rank-cell">6</span></td><td><span class="model-name">claude-sonnet-4-6</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1525</span></td></tr>
+              <tr><td><span class="rank-cell">7</span></td><td><span class="model-name">claude-opus-4-5-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1491</span></td></tr>
+              <tr class="cn-row"><td><span class="rank-cell">8</span></td><td><span class="cn-model">qwen3.6-plus 🇨🇳</span><span class="model-badge badge-cn">ALIBABA</span></td><td><span class="elo-score">1474</span></td></tr>
+              <tr><td><span class="rank-cell">9</span></td><td><span class="model-name">claude-opus-4-5</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1468</span></td></tr>
+              <tr><td><span class="rank-cell">10</span></td><td><span class="model-name">gpt-5.4-high</span><span class="model-badge badge-o">O</span></td><td><span class="elo-score">1457</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Matematik -->
+      <div class="arena-sub-view" id="arena-mat">
+        <div class="table-label">Arena.ai · Matematik — Elo · Nisan 2026 &nbsp;<a href="https://arena.ai/leaderboard" target="_blank">↗</a></div>
+        <div class="table-wrap">
+          <table class="arena-table">
+            <thead><tr><th>#</th><th style="text-align:left;">Model</th><th>Elo</th><th>Oylar</th></tr></thead>
+            <tbody>
+              <tr><td><span class="rank-cell rank-1">1</span></td><td><span class="model-name">gpt-5.4-high</span><span class="model-badge badge-o">O</span></td><td><span class="elo-score elo-top">1495</span></td><td><span class="vote-count">5.2K</span></td></tr>
+              <tr><td><span class="rank-cell rank-2">2</span></td><td><span class="model-name">claude-opus-4-6-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score elo-top">1490</span></td><td><span class="vote-count">6.8K</span></td></tr>
+              <tr><td><span class="rank-cell rank-3">3</span></td><td><span class="model-name">gemini-3.1-pro-preview</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1482</span></td><td><span class="vote-count">7.1K</span></td></tr>
+              <tr><td><span class="rank-cell">4</span></td><td><span class="model-name">claude-opus-4-6</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1475</span></td><td><span class="vote-count">11.0K</span></td></tr>
+              <tr><td><span class="rank-cell">5</span></td><td><span class="model-name">claude-opus-4-7-thinking</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1468</span></td><td><span class="vote-count">4.9K</span></td></tr>
+              <tr><td><span class="rank-cell">6</span></td><td><span class="model-name">gemini-3-pro</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1460</span></td><td><span class="vote-count">12.5K</span></td></tr>
+              <tr><td><span class="rank-cell">7</span></td><td><span class="model-name">claude-opus-4-7</span><span class="model-badge badge-a">A</span></td><td><span class="elo-score">1452</span></td><td><span class="vote-count">5.4K</span></td></tr>
+              <tr><td><span class="rank-cell">8</span></td><td><span class="model-name">gemini-3-flash</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1445</span></td><td><span class="vote-count">18.1K</span></td></tr>
+              <tr class="cn-row"><td><span class="rank-cell">9</span></td><td><span class="cn-model">glm-5.1 🇨🇳</span><span class="model-badge badge-cn">ZHIPU</span></td><td><span class="elo-score">1438</span></td><td><span class="vote-count">4.2K</span></td></tr>
+              <tr><td><span class="rank-cell">10</span></td><td><span class="model-name">grok-4.20-beta-0309</span><span class="model-badge badge-x">X</span></td><td><span class="elo-score">1431</span></td><td><span class="vote-count">6.9K</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Görsel -->
+      <div class="arena-sub-view" id="arena-img">
+        <div class="table-label">Arena.ai · Görsel Üretim — Elo &nbsp;<a href="https://arena.ai/leaderboard" target="_blank">↗</a></div>
+        <div class="table-wrap">
+          <table class="arena-table">
+            <thead><tr><th>#</th><th style="text-align:left;">Model</th><th>Elo</th></tr></thead>
+            <tbody>
+              <tr><td><span class="rank-cell rank-1">1</span></td><td><span class="model-name">gpt-image-2 (medium)</span><span class="model-badge badge-o">O</span></td><td><span class="elo-score elo-top">1512</span></td></tr>
+              <tr><td><span class="rank-cell rank-2">2</span></td><td><span class="model-name">gemini-3.1-flash-image-preview</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score elo-top">1270</span></td></tr>
+              <tr><td><span class="rank-cell rank-3">3</span></td><td><span class="model-name">gemini-3-pro-image-preview</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score elo-top">1244</span></td></tr>
+              <tr><td><span class="rank-cell">4</span></td><td><span class="model-name">gpt-image-1.5-high-fidelity</span><span class="model-badge badge-o">O</span></td><td><span class="elo-score">1241</span></td></tr>
+              <tr><td><span class="rank-cell">5</span></td><td><span class="model-name">mai-image-2</span><span class="model-badge badge-m">M</span></td><td><span class="elo-score">1184</span></td></tr>
+              <tr><td><span class="rank-cell">6</span></td><td><span class="model-name">reve-v1.5</span></td><td><span class="elo-score">1177</span></td></tr>
+              <tr><td><span class="rank-cell">7</span></td><td><span class="model-name">grok-imagine-image</span><span class="model-badge badge-x">X</span></td><td><span class="elo-score">1170</span></td></tr>
+              <tr><td><span class="rank-cell">8</span></td><td><span class="model-name">flux-2-max</span></td><td><span class="elo-score">1165</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Video -->
+      <div class="arena-sub-view" id="arena-vid">
+        <div class="table-label">Arena.ai · Video Üretim — Elo &nbsp;<a href="https://arena.ai/leaderboard" target="_blank">↗</a></div>
+        <div class="table-wrap">
+          <table class="arena-table">
+            <thead><tr><th>#</th><th style="text-align:left;">Model</th><th>Elo</th></tr></thead>
+            <tbody>
+              <tr class="cn-row"><td><span class="rank-cell rank-1">1</span></td><td><span class="cn-model">dreamina-seedance-2.0 🇨🇳</span><span class="model-badge badge-cn">BYTEDANCE</span></td><td><span class="elo-score elo-top">1460</span></td></tr>
+              <tr><td><span class="rank-cell rank-2">2</span></td><td><span class="model-name">happyhorse-1.0</span></td><td><span class="elo-score elo-top">1444</span></td></tr>
+              <tr><td><span class="rank-cell rank-3">3</span></td><td><span class="model-name">veo-3.1-audio-1080p</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score elo-top">1375</span></td></tr>
+              <tr><td><span class="rank-cell">4</span></td><td><span class="model-name">veo-3.1-fast-audio-1080p</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1368</span></td></tr>
+              <tr><td><span class="rank-cell">5</span></td><td><span class="model-name">sora-2-pro</span><span class="model-badge badge-o">O</span></td><td><span class="elo-score">1366</span></td></tr>
+              <tr><td><span class="rank-cell">6</span></td><td><span class="model-name">veo-3.1-audio</span><span class="model-badge badge-g">G</span></td><td><span class="elo-score">1366</span></td></tr>
+              <tr><td><span class="rank-cell">7</span></td><td><span class="model-name">grok-imagine-video-720p</span><span class="model-badge badge-x">X</span></td><td><span class="elo-score">1359</span></td></tr>
+              <tr class="cn-row"><td><span class="rank-cell">8</span></td><td><span class="cn-model">wan2.6-t2v 🇨🇳</span><span class="model-badge badge-cn">WANX</span></td><td><span class="elo-score">1345</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ OPENROUTER ═══ -->
+    <div class="view" id="view-or">
+      <div class="chart-block">
+        <div class="chart-block-title">
+          Haftalık Token Kullanımı &nbsp;·&nbsp; 28 Nis 2025 → 13 Nis 2026
+          <span class="badge-pill">~10× büyüme</span>
+        </div>
+        <div class="bar-chart" id="growthChart"></div>
+        <div class="chart-note">Kaynak: <a href="https://openrouter.ai/rankings" target="_blank">openrouter.ai/rankings</a></div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">Bu Ay (Nisan 2026) · Token Hacmi + Fiyat</div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#DC2626;"></span>Çin</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#6366F1;"></span>ABD</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span>Açık</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="or-table">
+          <thead><tr>
+            <th style="width:36px;">#</th><th>Model</th><th class="or-num">Kullanım</th><th class="or-num">Giriş /1M</th><th class="or-num">Çıkış /1M</th>
+          </tr></thead>
+          <tbody>
+            <tr class="cn-or"><td class="or-rank" style="color:#D97706;">🥇</td><td><div class="or-model">MiMo - V2 - Pro 🇨🇳</div><div class="or-company">Xiaomi · Çin</div></td><td><div class="or-tokens">9.13T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:100%;background:#D97706;"></div></div></td><td><span class="price-in">$0.10</span></td><td><span class="price-out">$0.30</span></td></tr>
+            <tr class="cn-or"><td class="or-rank" style="color:#525252;">🥈</td><td><div class="or-model">Qwen3.6 Plus 🇨🇳 🔓</div><div class="or-company">Alibaba · Çin</div></td><td><div class="or-tokens">6.27T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:68%;background:#0EA5E9;"></div></div></td><td><span class="price-in">$0.00</span></td><td><span class="price-out">$0.00</span></td></tr>
+            <tr class="cn-or"><td class="or-rank" style="color:#92400E;">🥉</td><td><div class="or-model">DeepSeek V3.2 🇨🇳</div><div class="or-company">DeepSeek · Çin</div></td><td><div class="or-tokens">5.37T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:58%;background:#8B5CF6;"></div></div></td><td><span class="price-in">$0.14</span></td><td><span class="price-out">$0.28</span></td></tr>
+            <tr class="us-or"><td class="or-rank">4</td><td><div class="or-model">Claude Sonnet 4.6 🇺🇸</div><div class="or-company">Anthropic · ABD</div></td><td><div class="or-tokens">5.07T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:55%;background:#F59E0B;"></div></div></td><td><span class="price-in">$3.00</span></td><td><span class="price-out">$15.00</span></td></tr>
+            <tr class="cn-or"><td class="or-rank">5</td><td><div class="or-model">MiniMax M2.7 🇨🇳</div><div class="or-company">MiniMax · Çin</div></td><td><div class="or-tokens">4.87T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:53%;background:#EF4444;"></div></div></td><td><span class="price-in">$0.08</span></td><td><span class="price-out">$0.20</span></td></tr>
+            <tr class="us-or"><td class="or-rank">6</td><td><div class="or-model">Claude Opus 4.6 🇺🇸</div><div class="or-company">Anthropic · ABD</div></td><td><div class="or-tokens">4.67T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:51%;background:#F59E0B;"></div></div></td><td><span class="price-in">$15.00</span></td><td><span class="price-out">$75.00</span></td></tr>
+            <tr class="us-or"><td class="or-rank">7</td><td><div class="or-model">Gemini 3 Flash 🇺🇸</div><div class="or-company">Google · ABD</div></td><td><div class="or-tokens">4.48T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:49%;background:#3B82F6;"></div></div></td><td><span class="price-in">$0.05</span></td><td><span class="price-out">$0.15</span></td></tr>
+            <tr class="cn-or"><td class="or-rank">8</td><td><div class="or-model">MiniMax M2.5 🇨🇳</div><div class="or-company">MiniMax · Çin</div></td><td><div class="or-tokens">4.18T</div><div class="or-bar-wrap"><div class="or-bar-fill" style="width:45%;background:#F87171;"></div></div></td><td><span class="price-in">$0.02</span></td><td><span class="price-out">$0.05</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="insight-box">
+        <strong>İstatistiksel Değerlendirme</strong><br>
+        İlk 8 modelin <strong>5'ini Asya menşeli modeller</strong> (Xiaomi, Alibaba, DeepSeek, MiniMax) oluşturmaktadır.
+        Qwen3.6 <strong>ücretsiz açık kaynak</strong> stratejisini izlerken, Xiaomi ve MiniMax yüksek hacimli API taleplerini
+        son derece rekabetçi maliyetlerle karşılamaktadır. Geliştiriciler, pazar lideri modellere yakın performansı
+        makul bütçelerle sunan bu mimarilere yönelmektedir.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showView(v){
+  document.getElementById('view-arena').classList.toggle('visible', v==='arena');
+  document.getElementById('view-or').classList.toggle('visible', v==='or');
+  document.getElementById('tab-arena').className='tab-btn'+(v==='arena'?' active-arena':'');
+  document.getElementById('tab-or').className='tab-btn'+(v==='or'?' active-or':'');
+}
+
+const arenaTabs=['genel','metin','kod','mat','img','vid'];
+function showArena(tab){
+  arenaTabs.forEach(t=>{
+    document.getElementById('arena-'+t).classList.toggle('visible', t===tab);
+    document.getElementById('st-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+// Growth bar chart
+const weeklyData=[2.1,2.0,2.2,2.1,2.3,2.2,2.1,2.4,2.2,2.3,2.2,2.5,2.4,2.3,2.6,2.5,2.7,2.6,2.8,2.7,3.0,2.9,3.2,3.4,3.7,3.6,4.0,3.9,4.4,4.3,4.8,5.2,5.7,6.2,6.8,7.0,7.5,9.2,10.0,11.8,13.8,14.5,14.0,15.5,19.0,21.0,23.0,19.0,28.0,21.0,22.4];
+const maxVal=Math.max(...weeklyData);
+const chart=document.getElementById('growthChart');
+weeklyData.forEach((v,i)=>{
+  const h=Math.max(3, Math.round((v/maxVal)*72));
+  const isRecent=i>=weeklyData.length-6;
+  const col=document.createElement('div');
+  col.className='bar-col';
+  const showLbl=i===0||i===Math.floor(weeklyData.length/2)||i===weeklyData.length-1;
+  col.innerHTML=`<div class="bar" style="height:${h}px;background:${isRecent?'#0EA5E9':'#BAE6FD'};" title="${v}T tokens/hafta"></div>${showLbl?`<div class="bar-lbl">${Math.round(v)}T</div>`:''}`;
+  chart.appendChild(col);
+});
+
+// TIMELINE
+const SLIDES=[
+  {file:'../1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html', year:'B1', label:'Bölüm 1', cover:true},
+  {file:'16-bolum2-kapak.html', year:'B2', label:'Kap.', cover:true},
+  {file:'17-model-haritasi.html', year:'Hrt', label:'Harita'},
+  {file:'18-leaderboard.html', year:'Sır', label:'Sıralama'},
+  {file:'21-bagiam-prompt.html', year:'Prmt', label:'Prompt'},
+  {file:'22-ekip-arkadasi.html', year:'Bilgi', label:'Bilgi Çöküşü'},
+  {file:'20-araclar.html', year:'Araç', label:'Modeller'},
+];
+
+function toggleFS(){
+  if(window.parent!==window){window.parent.postMessage({action:'toggleFS'},'*'); return;}
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') window.location.href='21-bagiam-prompt.html';
+  if(e.key==='ArrowLeft')  window.location.href='17-model-haritasi.html';
+});
+</script>
+<script src="assets/chapter2-divider.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

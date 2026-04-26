@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolum 3 - Teknik Kullanim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter3-theme.css">
+<style>
+:root { --accent: #10B981; --accent-soft: #D1FAE5; }
+html, body { height: 100%; overflow: hidden; }
+.poster {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 64px 1fr auto 60px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.eyebrow-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 64px;
+  border-bottom: 1.5px solid var(--ink);
+  gap: 18px;
+  background: var(--paper);
+}
+.eye-num {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+.eye-label,
+.eye-tag,
+.tile-kicker,
+.poster-foot {
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.eye-label { font-size: 11px; font-weight: 600; }
+.eye-rule { flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 9px); opacity: 0.28; }
+.eye-tag { font-size: 11px; color: var(--muted); }
+.hero { display: grid; grid-template-columns: 55% 45%; min-height: 0; }
+.title-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 64px 48px 72px;
+  background: var(--paper);
+  position: relative;
+}
+.title-col::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 48px;
+  bottom: 48px;
+  width: 6px;
+  background: var(--accent);
+}
+.badge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 34px; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.badge.filled { background: var(--ink); color: var(--paper); }
+.badge .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+.main-title {
+  font-family: "Inter Tight", sans-serif;
+  font-size: clamp(52px, 6.2vw, 96px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.main-title .accent-line { position: relative; display: inline-block; }
+.main-title .accent-line::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: 3px;
+  height: 10px;
+  background: var(--accent);
+  z-index: -1;
+}
+.title-meta { margin-top: 32px; display: flex; align-items: center; gap: 16px; }
+.meta-line { flex: 1; max-width: 56px; height: 1.5px; background: var(--ink); }
+.meta-text {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.geo-col {
+  position: relative;
+  overflow: hidden;
+  border-left: 1.5px solid var(--ink);
+  background:
+    linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0 / 44px 44px,
+    var(--bg);
+}
+.shape { position: absolute; border: 1.5px solid var(--ink); }
+.s-circle { width: 290px; height: 290px; border-radius: 50%; background: var(--accent); top: -80px; right: -55px; }
+.s-rect-blue { width: 172px; height: 78px; background: var(--blue); top: 44%; right: 56px; }
+.s-rect-amber { width: 112px; height: 112px; background: var(--amber); bottom: 76px; left: 62px; }
+.s-rect-pink { width: 42px; height: 188px; background: var(--pink); bottom: 0; right: 164px; }
+.s-square-purple { width: 76px; height: 76px; background: var(--purple); bottom: 52px; right: 54px; }
+.s-line-h { left: 0; right: 0; height: 1.5px; background: var(--ink); border: 0; top: 50%; opacity: 0.8; }
+.s-line-v { top: 0; bottom: 0; width: 1.5px; background: var(--ink); border: 0; left: 50%; opacity: 0.2; }
+.chapter-tiles { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1.5px solid var(--ink); }
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 92px;
+  padding: 14px 16px 16px;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--paper);
+  border-right: 1.5px solid var(--ink);
+  position: relative;
+}
+.tile:last-child { border-right: 0; }
+.tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--tc); }
+.tile-num {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 27px;
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1;
+}
+.tile-kicker { font-size: 9px; font-weight: 700; color: var(--muted); }
+.tile-name {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.tile:hover { background: var(--bg); }
+.poster-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+  border-top: 1.5px solid var(--ink);
+  background: var(--paper);
+  font-size: 11px;
+  color: var(--muted);
+}
+.poster-foot a { color: var(--muted); text-decoration: none; }
+.fs-btn { top: 14px !important; }
+.cover-htl { display: none; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+.fadeUp { animation: fadeUp 0.55s cubic-bezier(.2,.7,.2,1) both; }
+.scaleIn { animation: scaleIn 0.65s cubic-bezier(.2,.7,.2,1) both; }
+.d1 { animation-delay: .04s; } .d2 { animation-delay: .1s; } .d3 { animation-delay: .18s; } .d4 { animation-delay: .26s; }
+@media (max-width: 1100px) {
+  html, body { overflow: auto; }
+  .poster { height: auto; min-height: 100vh; grid-template-rows: 64px auto auto 60px; }
+  .hero { grid-template-columns: 1fr; }
+  .geo-col { display: none; }
+  .chapter-tiles { grid-template-columns: repeat(2, 1fr); }
+  .main-title { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="eyebrow-bar fadeUp d1">
+    <div class="eye-num">23</div>
+    <span class="eye-label">Yapay Zeka Egitimi · Bolum 3</span>
+    <div class="eye-rule"></div>
+    <span class="eye-tag">Teknik Kullanim</span>
+  </div>
+
+  <div class="hero">
+    <div class="title-col">
+      <div class="badge-row fadeUp d2">
+        <div class="badge filled"><span class="dot"></span>Bolum 3</div>
+        <div class="badge">Uygulama & Altyapi</div>
+      </div>
+      <h1 class="main-title fadeUp d3">
+        Teknik<br>
+        <span class="accent-line">Kullanim.</span>
+      </h1>
+      <div class="title-meta fadeUp d4">
+        <div class="meta-line"></div>
+        <span class="meta-text">IDE · n8n · Uygulama · Local LLM · RAG</span>
+      </div>
+    </div>
+
+    <div class="geo-col scaleIn d3" aria-hidden="true">
+      <div class="shape s-circle"></div>
+      <div class="shape s-line-h"></div>
+      <div class="shape s-line-v"></div>
+      <div class="shape s-rect-blue"></div>
+      <div class="shape s-rect-amber"></div>
+      <div class="shape s-rect-pink"></div>
+      <div class="shape s-square-purple"></div>
+    </div>
+  </div>
+
+  <div class="chapter-tiles fadeUp d4">
+    <a href="24-ai-ideler.html" class="tile" style="--tc:#10B981">
+      <span class="tile-num">24</span><span class="tile-kicker">Ders 1</span><span class="tile-name">AI IDE'ler</span>
+    </a>
+    <a href="28-n8n.html" class="tile" style="--tc:#3B82F6">
+      <span class="tile-num">28</span><span class="tile-kicker">Ders 2</span><span class="tile-name">n8n Otomasyon</span>
+    </a>
+    <a href="29-uygulamalar.html" class="tile" style="--tc:#F97316">
+      <span class="tile-num">29</span><span class="tile-kicker">Ders 3</span><span class="tile-name">Uygulamalar</span>
+    </a>
+    <a href="30-local-llm.html" class="tile" style="--tc:#8B5CF6">
+      <span class="tile-num">30</span><span class="tile-kicker">Ders 4</span><span class="tile-name">Yerel LLM</span>
+    </a>
+    <a href="34-ft-vs-rag.html" class="tile" style="--tc:#F59E0B">
+      <span class="tile-num">34</span><span class="tile-kicker">Ders 5</span><span class="tile-name">FT vs RAG</span>
+    </a>
+    <a href="35-kurumsal-ai.html" class="tile" style="--tc:#EC4899">
+      <span class="tile-num">35</span><span class="tile-kicker">Ders 6</span><span class="tile-name">Kurumsal AI</span>
+    </a>
+    <a href="36-gelecek.html" class="tile" style="--tc:#14B8A6">
+      <span class="tile-num">36</span><span class="tile-kicker">Ders 7</span><span class="tile-name">Gelecek</span>
+    </a>
+  </div>
+
+  <div class="poster-foot fadeUp d4">
+    <span>&larr; <a href="../2_Modeller_Kullan%C4%B1m/20-araclar.html">Bolum 2'ye Don</a></span>
+    <span>23 / 36</span>
+  </div>
+</div>
+
+<script>
+window.CHAPTER3_PREV = '../2_Modeller_Kullan%C4%B1m/20-araclar.html';
+window.CHAPTER3_SLIDES = [
+  { file: '23-bolum3-kapak.html', year: 'B3', label: 'Kapak', cover: true },
+  { file: '24-ai-ideler.html', year: 'IDE', label: "AI IDE'ler" },
+  { file: '28-n8n.html', year: 'n8n', label: 'n8n Otomasyon' },
+  { file: '29-uygulamalar.html', year: 'App', label: 'Uygulamalar' },
+  { file: '30-local-llm.html', year: 'LLM', label: 'Yerel LLM' },
+  { file: '34-ft-vs-rag.html', year: 'RAG', label: 'FT vs RAG' },
+  { file: '35-kurumsal-ai.html', year: 'AI', label: 'Kurumsal AI' },
+  { file: '36-gelecek.html', year: 'Gelecek', label: 'Gelecek' }
+];
+</script>
+<nav class="htl cover-htl">
+  <div class="htl-label">Bolum 3<b>Teknik Kullanim</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">1</b> / <span id="progTotal">8</span></div>
+</nav>
+<script src="assets/chapter3-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04 · Makine Öğrenmesi Türleri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#4F46E5; }
+
+/* Override slide grid for full-width 3-column layout */
+.slide.full {
+  display: flex;
+  flex-direction: column;
+  padding: 56px 64px 32px;
+  background: var(--paper);
+  grid-template-columns: none;
+}
+.slide.full::before {
+  content: "";
+  position: absolute;
+  left: 0; top: calc(var(--tl-h) + 56px); bottom: 32px;
+  width: 6px;
+  background: var(--accent);
+}
+
+.head-row {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 40px;
+  margin-bottom: 32px;
+  flex-shrink: 0;
+}
+.head-row .left-block { max-width: 56%; }
+.head-row .right-block {
+  max-width: 38%;
+  font-size: 15px;
+  color: var(--ink-2);
+  line-height: 1.55;
+  padding-bottom: 6px;
+}
+.head-row .right-block strong { font-weight: 600; color: var(--ink); }
+
+.tree-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  min-height: 0;
+  margin-bottom: 24px;
+}
+.tree-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px 28px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  text-decoration: none;
+  color: var(--ink);
+  position: relative;
+  transition: background 0.2s, transform 0.2s;
+  cursor: pointer;
+  overflow: hidden;
+}
+.tree-card::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 6px;
+  background: var(--accent);
+}
+.tree-card:hover { transform: translateY(-3px); background: var(--line-soft-2); }
+.tree-card .tc-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.tree-card .tc-icon {
+  width: 44px; height: 44px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+}
+.tree-card .tc-icon svg { width: 24px; height: 24px; }
+.tree-card .tc-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 26px; font-weight: 800;
+  line-height: 1.0; letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-top: 6px;
+}
+.tree-card .tc-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.tree-card .tc-text strong { font-weight: 600; color: var(--ink); }
+
+.subgrid { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.sub-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+}
+.sub-row .sb-ico {
+  width: 22px; height: 22px;
+  flex-shrink: 0;
+  background: var(--accent);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+}
+.sub-row .sb-ico svg { width: 12px; height: 12px; }
+.sub-row h4 {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+.sub-row p { font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+
+.tc-arrow {
+  position: absolute;
+  bottom: 18px; right: 18px;
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper);
+  transition: background 0.15s, color 0.15s;
+}
+.tc-arrow svg { width: 14px; height: 14px; }
+.tree-card:hover .tc-arrow { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+.foot-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 22px;
+  border-top: 1.5px solid var(--ink);
+}
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">3</b> / 14</div>
+</aside>
+
+<div class="slide full">
+  <div class="head-row">
+    <div class="left-block fadeUp d1">
+      <div class="eyebrow">
+        <span class="num">04</span>
+        <span>Makine Öğrenmesi Türleri</span>
+        <span class="dash"></span>
+        <span>1980'ler</span>
+      </div>
+      <h1 style="font-size:50px;">Makine nasıl öğrenir?<br><span class="hl">Üç farklı yol</span>.</h1>
+    </div>
+    <p class="right-block fadeUp d3">
+      Kural yazmak yerine makinenin veriden kendi kurallarını öğrenmesi —
+      ama elindeki veriye ve probleme göre <strong>strateji değişir</strong>.
+    </p>
+  </div>
+
+  <div class="tree-grid">
+    <a href="06-gozetimli.html" class="tree-card fadeUp d2">
+      <div class="tc-num">01 · Etiketli Veri</div>
+      <div class="tc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+      <h2 class="tc-title">Gözetimli<br>Öğrenme</h2>
+      <p class="tc-text">Öğretmenli model. Bilgisayara <strong>etiketlenmiş veriler</strong> gösterilir. "Bu kedi, bu köpek" diyerek öğretirsin.</p>
+      <div class="subgrid">
+        <div class="sub-row">
+          <div class="sb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg></div>
+          <div><h4>Sınıflandırma</h4><p>"Spam mı, normal mi?" → kategori seçer</p></div>
+        </div>
+        <div class="sub-row">
+          <div class="sb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div><h4>Regresyon</h4><p>"Bu ev ne kadar eder?" → sayı tahmin eder</p></div>
+        </div>
+      </div>
+      <div class="tc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
+
+    <a href="07-gozetimsiz.html" class="tree-card fadeUp d3">
+      <div class="tc-num">02 · Etiketsiz Veri</div>
+      <div class="tc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/></svg></div>
+      <h2 class="tc-title">Gözetimsiz<br>Öğrenme</h2>
+      <p class="tc-text">Etiket yok, cevap yok. Veri yığınına bırakılır ve kendi başına <strong>gizli yapıları</strong> keşfeder.</p>
+      <div class="subgrid">
+        <div class="sub-row">
+          <div class="sb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div><h4>Kümeleme</h4><p>Müşteri segmentleri → "Bunlar benzer alıyor"</p></div>
+        </div>
+        <div class="sub-row">
+          <div class="sb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div><h4>Boyut İndirgeme</h4><p>Karmaşık veriyi ana özelliklere indirger</p></div>
+        </div>
+      </div>
+      <div class="tc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
+
+    <a href="08-pekistirmeli.html" class="tree-card fadeUp d4">
+      <div class="tc-num">03 · Ödül-Ceza</div>
+      <div class="tc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 8 2 12 6 16"/><polyline points="18 8 22 12 18 16"/><line x1="2" y1="12" x2="22" y2="12"/></svg></div>
+      <h2 class="tc-title">Pekiştirmeli<br>Öğrenme</h2>
+      <p class="tc-text">Sıfır veri, deneme yanılma. Ajan ortama bırakılır, eylemine göre <strong>ödül ya da ceza</strong> alır.</p>
+      <div class="subgrid">
+        <div class="sub-row">
+          <div class="sb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg></div>
+          <div><h4>Oyun &amp; Strateji</h4><p>AlphaGo dünya Go şampiyonunu yendi</p></div>
+        </div>
+        <div class="sub-row">
+          <div class="sb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></div>
+          <div><h4>İnsan geri bildirimi → ChatGPT</h4><p>Geri bildirim × pekiştirme</p></div>
+        </div>
+      </div>
+      <div class="tc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
+  </div>
+
+  <div class="foot-row fadeUp d5">
+    <div class="nav">
+      <a href="03-noron.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+      <a href="06-gozetimli.html" class="primary">Gözetimli<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    </div>
+    <div class="pageno">04 / 14</div>
+  </div>
+</div>
+
+<script>
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '05-ml-turleri.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '06-gozetimli.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '03-noron.html';
+});
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

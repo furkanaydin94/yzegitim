@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 · AI · ML · DL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#2563EB; }
+
+/* Ara kapak — kronoloji gizli */
+.htl { display: none; }
+.slide { margin-top: 0; height: 100vh; }
+
+/* Tabs */
+.tabs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.tab-btn {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  transition: background 0.15s, color 0.15s;
+}
+.tab-btn:hover { background: var(--line-soft-2); }
+.tab-btn.active { background: var(--ink); color: var(--paper); }
+.tab-btn.active .tab-icon { color: var(--paper); }
+.tab-btn.active .chip { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); color: var(--paper); }
+.tab-icon {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: var(--ink);
+}
+.tab-icon svg { width: 18px; height: 18px; }
+.tab-content h3 {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.example-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Venn viz */
+.venn-stage {
+  width: min(560px, 92%);
+  aspect-ratio: 1 / 1;
+  position: relative;
+  z-index: 2;
+}
+.venn-stage svg { width: 100%; height: 100%; display: block; }
+.venn-circle {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  transform-origin: center;
+}
+.venn-text {
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 800;
+  pointer-events: none;
+  letter-spacing: 0.04em;
+}
+
+.viz-caption {
+  margin-top: 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+.viz-caption b { color: var(--ink); }
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">1</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">02</span>
+        <span>AI · ML · DL</span>
+        <span class="dash"></span>
+        <span>Temel</span>
+      </div>
+      <h1 class="fadeUp d2">İç içe<br><span class="hl">üç kavram</span>.</h1>
+      <p class="lede fadeUp d3">
+        Yapay zeka, makine öğrenmesi ve derin öğrenme — sık karıştırılan bu üç terim
+        <strong>iç içe geçmiş halkalardır</strong>. AI en geniş çatı, ML onun bir alt
+        kümesi, DL ise ML'in özel bir dalıdır.
+      </p>
+
+      <div class="tabs fadeUp d4">
+        <button class="tab-btn active" id="tab-ai" onclick="focusVenn('ai')">
+          <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+          <div class="tab-content">
+            <h3>Yapay Zeka (AI)</h3>
+            <div class="example-chips">
+              <span class="chip">Siri · Alexa</span>
+              <span class="chip">Otonom Araç</span>
+              <span class="chip">AlphaGo</span>
+              <span class="chip">Google Maps</span>
+            </div>
+          </div>
+        </button>
+        <button class="tab-btn" id="tab-ml" onclick="focusVenn('ml')">
+          <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+          <div class="tab-content">
+            <h3>Makine Öğrenmesi (ML)</h3>
+            <div class="example-chips">
+              <span class="chip">Netflix</span>
+              <span class="chip">Spotify Keşfet</span>
+              <span class="chip">Spam Filtresi</span>
+              <span class="chip">Borsa Tahmini</span>
+            </div>
+          </div>
+        </button>
+        <button class="tab-btn" id="tab-dl" onclick="focusVenn('dl')">
+          <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="6" x2="10.5" y2="11"/><line x1="16" y1="6" x2="13.5" y2="11"/><line x1="10.5" y1="13" x2="8" y2="18"/><line x1="13.5" y1="13" x2="16" y2="18"/></svg></span>
+          <div class="tab-content">
+            <h3>Derin Öğrenme (DL)</h3>
+            <div class="example-chips">
+              <span class="chip">ChatGPT · Gemini</span>
+              <span class="chip">DALL·E</span>
+              <span class="chip">Yüz Tanıma</span>
+              <span class="chip">Anlık Çeviri</span>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="01-kapak.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="03-noron.html" class="primary">Nöron<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">02 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right">
+    <div class="viz-head"><span class="dot"></span><span>Üç Halka · İnteraktif</span></div>
+
+    <div class="venn-stage">
+      <svg viewBox="0 0 600 600">
+        <g id="svg-ai" class="venn-circle" onclick="focusVenn('ai')">
+          <circle cx="300" cy="300" r="260" fill="rgba(37,99,235,0.06)" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="300" y="80" class="venn-text" fill="var(--ink)" font-size="20" text-anchor="middle">YAPAY ZEKA</text>
+        </g>
+        <g id="svg-ml" class="venn-circle" onclick="focusVenn('ml')">
+          <circle cx="300" cy="320" r="180" fill="rgba(37,99,235,0.10)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="300" y="180" class="venn-text" fill="var(--ink)" font-size="16" text-anchor="middle">MAKİNE ÖĞR.</text>
+        </g>
+        <g id="svg-dl" class="venn-circle" onclick="focusVenn('dl')">
+          <circle cx="300" cy="350" r="100" fill="var(--accent)" stroke="var(--ink)" stroke-width="2"/>
+          <text x="300" y="345" class="venn-text" fill="var(--paper)" font-size="14" text-anchor="middle">DERİN</text>
+          <text x="300" y="365" class="venn-text" fill="var(--paper)" font-size="14" text-anchor="middle">ÖĞRENME</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="viz-caption">Aktif: <b id="vennActive">Yapay Zeka</b></div>
+  </section>
+</div>
+
+<script>
+function focusVenn(type){
+  ['ai','ml','dl'].forEach(t => document.getElementById('tab-'+t).classList.remove('active'));
+  document.getElementById('tab-'+type).classList.add('active');
+  const ai = document.getElementById('svg-ai');
+  const ml = document.getElementById('svg-ml');
+  const dl = document.getElementById('svg-dl');
+  ai.style.transform = type==='ai' ? 'scale(1.04)' : 'scale(1)';
+  ml.style.transform = type==='ml' ? 'scale(1.06)' : 'scale(1)';
+  dl.style.transform = type==='dl' ? 'scale(1.10)' : 'scale(1)';
+  const labels = { ai:'Yapay Zeka', ml:'Makine Öğrenmesi', dl:'Derin Öğrenme' };
+  document.getElementById('vennActive').textContent = labels[type];
+}
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '02-ai-ml-dl.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '03-noron.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '01-kapak.html';
+});
+
+
+setTimeout(() => focusVenn('ai'), 400);
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

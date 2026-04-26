@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 · Yapay Zeka Eğitimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF7;
+  --paper: #FFFFFF;
+  --ink: #0A0A0A;
+  --muted: #525252;
+  --line-soft: #E5E4DE;
+  --c1: #F97316;
+  --c2: #A855F7;
+  --c3: #6366F1;
+  --amber: #F59E0B;
+  --pink: #EC4899;
+  --teal: #14B8A6;
+  --green: #22C55E;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ── POSTER GRID ──────────────────────────────────── */
+.poster {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 64px 1fr auto 60px;
+  overflow: hidden;
+}
+
+/* ── EYEBROW BAR ──────────────────────────────────── */
+.eyebrow-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 64px;
+  border-bottom: 1.5px solid var(--ink);
+  gap: 18px;
+  background: var(--paper);
+}
+.eye-num {
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.eye-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink);
+}
+.eye-rule {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 9px);
+  opacity: 0.3;
+}
+.eye-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--muted);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: 54% 46%;
+  overflow: hidden;
+}
+
+/* Title column */
+.title-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 52px 64px 52px 72px;
+  background: var(--paper);
+  position: relative;
+}
+.title-col::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 52px; bottom: 52px;
+  width: 5px;
+  background: var(--c1);
+}
+
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink);
+}
+.badge.filled { background: var(--ink); color: var(--paper); }
+.badge .dot { width: 8px; height: 8px; background: var(--c1); border-radius: 50%; }
+
+.main-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: clamp(62px, 7.5vw, 120px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.main-title .accent-line {
+  position: relative;
+  display: inline-block;
+}
+.main-title .accent-line::after {
+  content: "";
+  position: absolute;
+  left: -2px; right: -2px;
+  bottom: 2px;
+  height: 10px;
+  background: var(--c1);
+  z-index: -1;
+  opacity: 0.85;
+}
+
+.title-meta {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.meta-line {
+  flex: 1;
+  height: 1.5px;
+  background: var(--ink);
+  max-width: 48px;
+}
+.meta-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Geometric column */
+.geo-col {
+  position: relative;
+  background: var(--bg);
+  border-left: 1.5px solid var(--ink);
+  overflow: hidden;
+}
+
+/* Grid overlay */
+.geo-col::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0 / 44px 44px;
+  opacity: 0.5;
+}
+
+/* Shapes */
+.shape { position: absolute; }
+
+.s-circle-lg {
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: var(--c1);
+  top: -70px; right: -50px;
+}
+.s-circle-lg::after {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.3);
+}
+
+.s-rect-purple {
+  width: 170px; height: 80px;
+  background: var(--c2);
+  top: 50%;
+  right: 60px;
+  transform: translateY(-20px);
+}
+
+.s-circle-pink {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: var(--pink);
+  bottom: 90px; left: 50px;
+}
+
+.s-rect-amber {
+  width: 36px; height: 180px;
+  background: var(--amber);
+  bottom: 0; right: 160px;
+}
+
+.s-square-teal {
+  width: 72px; height: 72px;
+  background: var(--teal);
+  bottom: 50px; right: 50px;
+}
+
+.s-circle-outline {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  border: 3px solid var(--c3);
+  bottom: 40px; left: 110px;
+}
+
+.s-dot-green {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--green);
+  top: 130px; left: 64px;
+}
+
+.s-hline {
+  left: 0; right: 0;
+  height: 1.5px;
+  background: var(--ink);
+  top: 50%;
+}
+
+.s-rect-sm {
+  width: 80px; height: 40px;
+  background: var(--c3);
+  top: 80px; left: 80px;
+}
+
+.s-vline {
+  top: 0; bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+  left: 50%;
+  opacity: 0.25;
+}
+
+/* ── CHAPTER TILES ────────────────────────────────── */
+.chapter-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1.5px solid var(--ink);
+}
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 32px;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--paper);
+  border-right: 1.5px solid var(--ink);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+.tile:last-child { border-right: none; }
+.tile::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: var(--tc);
+  transition: width 0.2s;
+}
+.tile:hover::before { width: 100%; opacity: 0.12; }
+.tile:hover { transform: translateY(-2px); }
+
+.tile-num {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 40px; font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--tc);
+  flex-shrink: 0;
+  min-width: 52px;
+}
+.tile-info { display: flex; flex-direction: column; gap: 3px; }
+.tile-bölüm {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+}
+.tile-name {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 15px; font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.tile-arrow {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border: 1.5px solid var(--tc);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--tc);
+  transition: background 0.2s;
+}
+.tile-arrow svg { width: 12px; height: 12px; }
+.tile:hover .tile-arrow { background: var(--tc); color: var(--paper); border-color: var(--tc); }
+
+/* ── FOOTER ───────────────────────────────────────── */
+.poster-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+  border-top: 1.5px solid var(--ink);
+  background: var(--paper);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted);
+}
+.foot-brand {
+  display: flex; align-items: center; gap: 12px;
+}
+.foot-brand .sq {
+  width: 14px; height: 14px;
+  background: var(--c1);
+  border: 1.5px solid var(--ink);
+}
+
+/* ── FULLSCREEN BTN ───────────────────────────────── */
+.fs-btn {
+  position: fixed; top: 14px; right: 14px;
+  width: 36px; height: 36px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 10px; cursor: pointer; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink); transition: all 0.15s;
+}
+.fs-btn:hover { background: var(--ink); color: var(--paper); }
+.fs-btn svg { width: 14px; height: 14px; }
+
+/* ── ANIMATIONS ───────────────────────────────────── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+.fadeUp { animation: fadeUp 0.6s cubic-bezier(.2,.7,.2,1) both; }
+.scaleIn { animation: scaleIn 0.7s cubic-bezier(.2,.7,.2,1) both; }
+.d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.12s; } .d3 { animation-delay: 0.22s; }
+.d4 { animation-delay: 0.30s; } .d5 { animation-delay: 0.42s; } .d6 { animation-delay: 0.55s; }
+
+@media (max-width: 1100px) {
+  .poster { grid-template-rows: 54px 1fr auto 54px; }
+  .eyebrow-bar { padding: 0 32px; }
+  .title-col { padding: 40px 32px 40px 40px; }
+  .main-title { font-size: 56px; }
+  .tile { padding: 14px 20px; gap: 14px; }
+  .tile-num { font-size: 30px; }
+  .tile-name { font-size: 13px; }
+  .poster-foot { padding: 0 32px; }
+}
+</style>
+</head>
+
+<body>
+<div class="poster">
+
+  <!-- Eyebrow -->
+  <div class="eyebrow-bar fadeUp d1">
+    <div class="eye-num">01</div>
+    <span class="eye-label">Yapay Zeka Eğitimi</span>
+    <div class="eye-rule"></div>
+    <span class="eye-tag">Bölüm 1 — 3</span>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+
+    <!-- Title column -->
+    <div class="title-col">
+      <div class="badge-row fadeUp d2">
+        <div class="badge filled"><span class="dot"></span>Başlangıç</div>
+        <div class="badge">Temel → İleri</div>
+      </div>
+
+      <h1 class="main-title fadeUp d3">
+        Yapay<br>
+        Zeka<br>
+        <span class="accent-line">Eğitimi.</span>
+      </h1>
+
+      <div class="title-meta fadeUp d4">
+        <div class="meta-line"></div>
+        <span class="meta-text">Temel Kavramlar · Tarihsel Gelişim · Güncel Araçlar · İş Süreçlerine Entegrasyon</span>
+      </div>
+    </div>
+
+    <!-- Geometric composition -->
+    <div class="geo-col scaleIn d3" aria-hidden="true">
+      <!-- Large orange circle (top right, partially cropped) -->
+      <div class="shape s-circle-lg"></div>
+
+      <!-- Indigo small rect (top left of geo area) -->
+      <div class="shape s-rect-sm"></div>
+
+      <!-- Green dot -->
+      <div class="shape s-dot-green"></div>
+
+      <!-- Horizontal mid-line -->
+      <div class="shape s-hline"></div>
+
+      <!-- Vertical faint line -->
+      <div class="shape s-vline"></div>
+
+      <!-- Purple rectangle (mid right) -->
+      <div class="shape s-rect-purple"></div>
+
+      <!-- Amber thin vertical strip -->
+      <div class="shape s-rect-amber"></div>
+
+      <!-- Pink circle (bottom left) -->
+      <div class="shape s-circle-pink"></div>
+
+      <!-- Teal square (bottom right) -->
+      <div class="shape s-square-teal"></div>
+
+      <!-- Indigo circle outline (bottom center) -->
+      <div class="shape s-circle-outline"></div>
+    </div>
+
+  </div>
+
+  <!-- Chapter tiles -->
+  <div class="chapter-tiles fadeUp d5">
+    <a href="02-ai-ml-dl.html" class="tile" style="--tc: #F97316">
+      <span class="tile-num">01</span>
+      <div class="tile-info">
+        <span class="tile-bölüm">Bölüm 1</span>
+        <span class="tile-name">Yapay Zeka<br>Nasıl Öğrenir?</span>
+      </div>
+      <div class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
+    <a href="../2_Modeller_Kullanım/16-bolum2-kapak.html" class="tile" style="--tc: #A855F7">
+      <span class="tile-num">02</span>
+      <div class="tile-info">
+        <span class="tile-bölüm">Bölüm 2</span>
+        <span class="tile-name">Modeller &amp;<br>Kullanım</span>
+      </div>
+      <div class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
+    <a href="../3_Teknik_Kullan%C4%B1m/23-bolum3-kapak.html" class="tile" style="--tc: #10B981">
+      <span class="tile-num">03</span>
+      <div class="tile-info">
+        <span class="tile-bölüm">Bölüm 3</span>
+        <span class="tile-name">Teknik<br>Kullanım</span>
+      </div>
+      <div class="tile-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="poster-foot fadeUp d6">
+    <span>01 / 14</span>
+    <span></span>
+  </div>
+
+</div>
+
+<script>
+function toggleFS() {
+  if (window.parent !== window) { window.parent.postMessage({ action: 'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '02-ai-ml-dl.html';
+});
+</script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

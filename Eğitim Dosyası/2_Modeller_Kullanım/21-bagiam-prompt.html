@@ -1,0 +1,630 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>21 · Bağlam & Prompt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter2-theme.css">
+<style>
+:root { --accent: #EC4899; --accent-soft: #FCE7F3; }
+
+/* Right panel scrollable */
+.right {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-soft) transparent;
+}
+.right::-webkit-scrollbar { width: 4px; }
+.right::-webkit-scrollbar-thumb { background: var(--line-soft); }
+.right > * { flex-shrink: 0; }
+
+/* Right panel heading */
+.right-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.right-head-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.right-head-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--line-soft);
+  padding: 3px 8px;
+}
+
+/* Toggle row */
+.toggle-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.toggle-btn {
+  padding: 7px 12px;
+  border: 1.5px solid var(--line-soft);
+  background: var(--paper);
+  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
+.toggle-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Example boxes */
+.example-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.example-box {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  overflow: hidden;
+}
+.ex-header {
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.ex-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ex-label { color: var(--muted); }
+.ex-tag {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ex-bad .ex-dot { background: #EF4444; }
+.ex-bad .ex-tag { background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
+.ex-good .ex-dot { background: #22C55E; }
+.ex-good .ex-tag { background: #DCFCE7; color: #16A34A; border: 1px solid #86EFAC; }
+
+.ex-content { padding: 12px 14px; }
+.ex-prompt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  padding: 10px 12px;
+}
+.ex-why {
+  margin-top: 9px;
+  padding: 9px 12px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.ex-bad .ex-why {
+  background: #FEF2F2;
+  color: #991B1B;
+  border-left: 3px solid #EF4444;
+}
+.ex-good .ex-why {
+  background: #F0FDF4;
+  color: #166534;
+  border-left: 3px solid #22C55E;
+}
+
+/* Accordion output */
+.ex-output-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  padding: 7px 10px;
+  border: 1.5px solid var(--line-soft);
+  background: transparent;
+  cursor: pointer;
+  font-size: 10.5px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--muted);
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+  letter-spacing: 0.04em;
+}
+.ex-bad .ex-output-toggle:hover { border-color: #EF4444; color: #DC2626; }
+.ex-good .ex-output-toggle:hover { border-color: #22C55E; color: #16A34A; }
+.ex-output-toggle .arrow { margin-left: auto; transition: transform 0.2s; font-style: normal; }
+.ex-output-toggle.open .arrow { transform: rotate(180deg); }
+
+.ex-output-body {
+  display: none;
+  margin-top: 6px;
+  border: 1.5px solid var(--line-soft);
+  overflow: hidden;
+}
+.ex-output-body.open { display: block; }
+.ex-output-label {
+  font-size: 9.5px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 5px 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.ex-bad .ex-output-label { background: #FEE2E2; color: #DC2626; }
+.ex-good .ex-output-label { background: #DCFCE7; color: #16A34A; }
+.ex-output-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  background: var(--bg);
+  padding: 10px 12px;
+}
+
+/* Principles grid */
+.principles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pcard {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 12px 14px;
+}
+.pcard .p-icon {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.pcard .p-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.pcard .p-desc {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* Left note-box list */
+.nb-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 6px;
+}
+.nb-list li {
+  font-size: 13px;
+  color: var(--muted);
+}
+.nb-list li::before {
+  content: "—";
+  margin-right: 6px;
+  color: var(--accent);
+  font-weight: 700;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP TIMELINE -->
+<nav class="htl" id="htl">
+  <div class="htl-label">Bölüm 2<b>Prompt</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">5</b> / 7</div>
+</nav>
+
+<div class="slide">
+
+  <!-- LEFT -->
+  <aside class="left fadeUp">
+    <div>
+      <div class="eyebrow d1">
+        <span class="num">21</span>
+        <span>Bölüm 2 · Bağlam & Prompt</span>
+      </div>
+      <h1 class="d2" style="margin-top:20px;">Prompt =<br><span class="hl">Konum&shy;lanma</span>.</h1>
+
+      <div class="note-box fadeUp d3" style="margin-top:18px;">
+        <p>İSPER'de her belge <strong>hukuki sonuç</strong> doğurur.
+        Teknik şartname ihaleye çıkar, BİO raporu yönetim kararını etkiler,
+        İSG analizi saha güvenliğini belirler.</p>
+        <p style="margin-top:8px;">Bağlam ne kadar kuruma özel → model o kadar isabetli → çıktı doğrudan kullanılabilir.</p>
+      </div>
+
+      <div class="note-box fadeUp d4" style="margin-top:12px;">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">İyi prompt'ta bulunması gerekenler</p>
+        <ul class="nb-list">
+          <li>Rol &amp; birim</li>
+          <li>Gerçek rakam</li>
+          <li>Format talebi</li>
+          <li>Referans belge</li>
+          <li>Dil / ton kuralı</li>
+        </ul>
+      </div>
+
+      <div class="note-box fadeUp d5" style="margin-top:12px;background:var(--accent-soft);border-color:var(--accent);">
+        <p><strong>22.568 çalışan, 34 istihdam ofisi, 11,8M sayaç</strong> — bu rakamlar prompt'ta yazılı olduğunda model İSPER'in ölçeğini anlıyor ve çıktıyı ona göre kalibre ediyor.</p>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="18-leaderboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="22-ekip-arkadasi.html" class="primary">Ekip<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">21 / 22</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <!-- RIGHT -->
+  <section class="right">
+
+    <div class="right-head fadeUp d1">
+      <div class="right-head-title">Prompt Karşılaştırması</div>
+      <div class="right-head-badge">etkileşimli</div>
+    </div>
+
+    <div class="toggle-row fadeUp d2">
+      <button class="toggle-btn active" id="btn-sartname" onclick="showExample('sartname')">📋 Teknik şartname</button>
+      <button class="toggle-btn" id="btn-rapor" onclick="showExample('rapor')">📊 BİO raporu</button>
+      <button class="toggle-btn" id="btn-oso" onclick="showExample('oso')">📈 OSO dashboard</button>
+      <button class="toggle-btn" id="btn-isg" onclick="showExample('isg')">🦺 ISG risk</button>
+    </div>
+
+    <div class="example-container fadeUp d3" id="example-area">
+      <!-- Injected by JS -->
+    </div>
+
+    <div class="principles-grid fadeUp d4">
+      <div class="pcard">
+        <div class="p-icon">🏢</div>
+        <div class="p-title">Birimini tanıt</div>
+        <div class="p-desc">"İSPER Satın Alma Müdürlüğü'nde KİK mevzuatına hâkim uzman müdürüm" — model doğru dili ve yasal çerçeveyi otomatik seçer.</div>
+      </div>
+      <div class="pcard">
+        <div class="p-icon">📐</div>
+        <div class="p-title">Format zorla</div>
+        <div class="p-desc">Bölüm sırasını, tablo yapısını ve dil kurallarını yaz. "Karar verilmiştir" edilgen dili model kendi seçmez — sen söylemelisin.</div>
+      </div>
+      <div class="pcard">
+        <div class="p-icon">📎</div>
+        <div class="p-title">Referans yapıştır</div>
+        <div class="p-desc">Geçen yılın yazısını, dolu bir şablonu veya örnek bir tutanağı eke koy. Model üslubu klonlar — sıfırdan format aramaz.</div>
+      </div>
+      <div class="pcard">
+        <div class="p-icon">🔢</div>
+        <div class="p-title">Gerçek sayı ver</div>
+        <div class="p-desc">22.268 sendikalı çalışan, 276.874 kümülatif istihdam, 605 AC — bu rakamlar modeli tahmine değil, gerçek veriye dayandırır.</div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+const examples = {
+  sartname: {
+    bad: {
+      prompt: `Personel servisi için teknik şartname yaz.`,
+      why: `Kaç araç, hangi güzergahlar, kaç personel, hangi vardiyalar? Araç özellikleri belirtilmemiş. Güvenlik koşulları, GPS zorunluluğu, sigorta kapsamı yok. Model genel bir ulaşım şablonu üretir — ihaleye çıkılamaz, hukuki geçerliliği olmaz.`
+    },
+    good: {
+      prompt: `Sen İSPER Satın Alma ve Sözleşmeler Müdürlüğü'nde görev\nyapan bir uzmansın. Kamu ihale mevzuatına\n(4734 sayılı KİK) hâkimsin.\n\nAşağıdaki bilgilerle Personel Servisi Hizmet Alımı İşi için\nresmi teknik şartname hazırla:\n\nHizmet kapsamı:\n- Hizmet süresi: 01.06.2025 – 31.05.2026 (12 ay)\n- Taşınan personel: İSPER genel merkez + saha birimleri,\n  yaklaşık 850 kişi/gün\n- Güzergah sayısı: 21 hat (liste ekte)\n- Vardiya düzeni: 06:30–09:00 sabah / 17:30–20:00 akşam\n\nAraçlara ilişkin minimum koşullar (şartnamede zorunlu yaz):\n- Yaş sınırı: model yılı 2020 ve üzeri\n- Kapasite: 14–26 koltuk arası (hat bazlı listelenecek)\n- Donanım: klima, emniyet kemeri (tüm koltuklar),\n  araç takip sistemi (GPS), yangın söndürücü, ilk yardım kiti\n- Yakıt türü: dizel veya LPG (elektrikli araç tercih sebebi)\n\nYükleniciye yönelik koşullar:\n- Sürücüler: en az 3 yıl deneyim, SRC belgesi, psikoteknik\n- Yedek araç: aktif araç sayısının %10'u kadar hazır bulundurmak\n- Kaza/arıza bildirim süresi: 30 dakika\n- Aylık raporlama: yakıt tüketimi, sefer saatleri, şikayet logu\n\nŞartname bölümleri (bu sırayla yaz, hiç atlama):\n  1. Tanımlar ve kısaltmalar\n  2. Hizmetin kapsamı ve süresi\n  3. Araçlara ilişkin teknik koşullar\n  4. Sürücü ve personel koşulları\n  5. Güzergah ve sefer planı\n  6. Yedek araç ve kesinti yönetimi\n  7. Denetim, raporlama ve cezai şartlar\n  8. İş sağlığı ve güvenliği yükümlülükleri\n\nGeçen yıl hazırlanan Personel Servisi teknik şartnamesini\nreferans al — yapıyı koru, araç koşulları ve güzergah sayısını\ngüncelle:\n[2024 şartnamesi buraya yapıştırılır]`,
+      why: `Hizmet süresi, personel sayısı, araç özellikleri, sürücü koşulları ve bölüm sırası eksiksiz tanımlanmış. KİK mevzuatı referansı hukuki geçerliliği garanti ediyor. Referans şartname talebi kurumun formatını kopyalatıyor — çıktı ihale dosyasına doğrudan girilebilir kalitede.`
+    }
+  },
+  rapor: {
+    bad: {
+      prompt: `BİO Mart raporunu özetle.`,
+      why: `Model "BİO" kısaltmasını biliyor olsa bile hangi metrikler kritik, kim okuyacak, hangi karar alınacak? Bu sorular cevapsız kalınca tüm veriler düz liste olarak sıralanır — ne yorum var ne öneri, raporun yönetim değeri sıfır.`
+    },
+    good: {
+      prompt: `Sen İSPER İş Zekası Müdürlüğü'nde çalışan bir veri analisti\nolarak 34 Bölgesel İstihdam Ofisi'nin (BİO) Mart 2025\naylık faaliyet verilerini analiz edeceksin.\n\nRaporun üç ayrı okuyucusu var — her biri için ayrı bölüm yaz:\n\n1. Üst yönetim özeti (max 1 sayfa)\n   → Kümülatif istihdam rakamı vs. dönem hedefi\n   → Geçen aya göre değişim ve 1 cümle yorum\n   → Öne çıkan risk: hangi ofis hedefin altında, neden?\n   → 1 stratejik aksiyon önerisi\n\n2. BİO Koordinatörlüğü için ofis bazlı analiz\n   → Hedefi tutturan / tutturamayan ofisler (tablo)\n   → İstihdam kırılımı: kadın / özel gereksinimli / yurt öğrencisi\n   → Düşük performanslı 3 ofis için olası neden + aksiyon\n\n3. Paydaş iletişimi için kısa özet (intranet / dış paylaşım)\n   → Rakam odaklı, kurumsal dil, 100 kelimeyi geçmeyecek\n   → İSPER'in kümülatif 276.874 istihdam hedefine ilerlemeyi vurgula\n\nDil: Nesnel, rakam destekli — yorum yapıyorsan\n"veriye göre" veya "öngörülen neden" ifadesiyle başla\nŞubat 2025 raporu karşılaştırma için ektedir.\n\nVeri: [BİO Mart 2025 tablosu buraya yapıştırılır]\n[Şubat 2025 raporu buraya yapıştırılır]`,
+      why: `Üç farklı okuyucu ve her biri için ayrı format, uzunluk ve odak tanımlanmış. "Kümülatif 276.874" gibi gerçek İSPER verisi modeli doğru çerçeveye kilitliyor. Tek prompt, üç ayrı çıktı üretiyor — koordinatörden Genel Müdür'e kadar herkes kendi bölümünü kullanabilir.`
+    }
+  },
+  oso: {
+    bad: {
+      prompt: `Bu tabloyu analiz et.`,
+      why: `Hangi metrik kritik, okuma oranı mı düşüyor çalışan mı fazla? Kim okuyacak, ne kararı alacak? Bu sorular cevapsız kalınca model tabloyu düz özetler — yönetim değeri sıfır.`
+    },
+    good: {
+      prompt: `Sen İSPER İş Zekası Müdürlüğü'nde çalışan bir veri analisti\nolarak Ortak Sayaç Okuma (OSO) projesinin aylık operasyonel\nverilerini yorumluyorsun.\n\nOSO bağlamı:\n- Kapsam: İSKİ ve İGDAŞ iş birliğiyle İstanbul geneli\n- Toplam sayaç: 11.878.384 (su + doğalgaz)\n- Mevcut çalışan: 1.228 saha okuyucu\n- Verimlilik hedefi: %29 artış (2021 başlangıç baz)\n- Aylık okuma hedefi: [###] sayaç/ay\n\nAşağıdaki OSO aylık verisini analiz et ve iki farklı\nokuyucu için ayrı bölümler yaz:\n\n1. Teknoloji ve İş Geliştirme Kıdemli Müdürü için (1 sayfa)\n   → Gerçekleşen okuma sayısı vs. hedef (fark + %)\n   → Çalışan başına düşen sayaç verimliliği (mevcut ay vs.\n     geçen ay vs. 2021 baz)\n   → Öne çıkan risk: hangi bölge / güzergah düşük performans?\n   → 1 operasyonel aksiyon önerisi\n\n2. Yönetim Kurulu sunumu için (max 3 madde, rakam odaklı)\n   → Proje başından bu yana kümülatif okuma sayısı\n   → Verimlilik trendinin özeti\n   → Bir sonraki aya yönelik öngörü\n\nVeri yorumlama kuralları:\n- Yorum yapıyorsan "veriye göre" veya "trend gösteriyor"\n  ile başla\n- Çalışan sayısı değişimini sayaç büyümesiyle birlikte\n  değerlendir (2022-2025: sayaç +%9→%19→%13,\n  çalışan -%5→-%7→-%6)\n- Saha koşulu / mevsimsel faktör varsa not düş\n\nVeri: [OSO aylık tablo buraya yapıştırılır]`,
+      why: `11.878.384 sayaç, verimlilik baz yılı ve çalışan-sayaç trendi gerçek İSPER verisi — model tahmin değil gerçeğe dayalı yorum üretiyor. İki farklı okuyucu formatı tek promptta iki çıktı sağlıyor. Müdürden Yönetim Kurulu'na kadar herkes kendi bölümünü kullanabilir.`
+    }
+  },
+  isg: {
+    bad: {
+      prompt: `Çalışanlar için risk değerlendirme raporu hazırla.`,
+      why: `Hangi görev, hangi ortam, hangi tehlike sınıfı? 6331 sayılı Kanun'un istediği format yok. Model genel bir İSG şablonu üretir — mevzuata uygunluğu yok, imzalanamaz, denetime sunamaz.`
+    },
+    good: {
+      prompt: `Sen İSPER İş Sağlığı ve Güvenliği Müdürlüğü'nde görev yapan\n bir İSG uzmanısın. 22.568 çalışanın ISG mevzuatı\nuyumundan sorumlusun; 6331 sayılı İş Sağlığı ve Güvenliği\nKanunu ve ilgili yönetmelikler çerçevesinde risk\ndeğerlendirmesi yapıyorsun.\n\n2025 yılında görev bazlı KKD analizi ile 37,5 milyon TL\ntasarruf sağladın — bu yaklaşımı risk değerlendirmesine\nde uyguluyorsun: görev tipine göre tehlike profili çıkar,\ngenel şablon kullanma.\n\nAşağıdaki bilgilerle 6331 sayılı Kanun ve Risk\nDeğerlendirme Yönetmeliği'ne uygun rapor hazırla:\n\nDeğerlendirme kapsamı:\n- Birim: [örn. OSO Saha Operasyonları / Kent Lokantaları /\n  Cenaze Hizmetleri]\n- Çalışan sayısı: [##]\n- Çalışma ortamı: [kapalı/açık/araçlı saha]\n- Vardiya düzeni: [gündüz/gece/dönüşümlü]\n- Mevcut KKD: [liste]\n- Son kaza/ramak kala kaydı: [varsa tarih + özet]\n\nMetodoloji: L Tipi Matris\n(Olasılık 1-5 × Şiddet 1-5 → Risk Skoru)\n\nRisk raporu bölümleri (bu sırayla, atlamadan):\n1. Değerlendirme ekibi ve tarih\n2. Çalışma ortamı tanımı\n3. Tehlike tanımlama tablosu\n   (Tehlike | Etkilenen kişi | Mevcut önlem)\n4. L Matris risk puanlama tablosu\n   (Olasılık | Şiddet | Risk skoru | Risk seviyesi)\n5. Kabul edilemez riskler için aksiyon planı\n   (Aksiyon | Sorumlu | Süre | Tamamlanma kriteri)\n6. KKD ihtiyaç matrisi (görev bazlı)\n7. Yeniden değerlendirme tarihi\n\nRisk seviyeleri: 1-4 Düşük | 5-9 Orta | 10-16 Yüksek |\n17-25 Kabul Edilemez\n\nDil: Resmi, teknik — yorum değil tespit.\nOnay bölümü: İSG Uzmanı + Birim Amiri + İşveren imza alanı.`,
+      why: `6331 sayılı Kanun, L matris metodolojisi, 37,5M TL tasarruf bağlamı ve KKD ihtiyaç matrisi tamamen İSPER'e özgü. Görev bazlı yaklaşım modeli genel şablondan çıkarıp kuruma özel tehlike profili üretmeye yönlendiriyor. Çıktı imzaya hazır, denetime sunulabilir kalitede.`
+    }
+  }
+};
+
+/* ── Accordion output snippets ── */
+const outputs = {
+  sartname: {
+    bad:  `TEKNİK ŞARTNAME — PERSONEL SERVİSİ HİZMETİ
+
+1. Kapsam
+Yüklenici, personelin işe gidip gelmesini sağlayacaktır.
+
+2. Araç Özellikleri
+Araçlar temiz ve bakımlı olmalıdır.
+Klima bulunmalıdır.
+
+3. Sürücü Koşulları
+Sürücüler ehliyetli olmalıdır.
+
+4. Diğer Hususlar
+Hizmet aksatılmadan yürütülecektir.
+
+─────────────────────────────────────
+⚠ İhaleye çıkılamaz. Araç sayısı,
+güzergah, GPS zorunluluğu, cezai şart
+yok. Her madde elle yeniden yazılmalı.`,
+    good: `TEKNİK ŞARTNAME
+Personel Servisi Hizmet Alımı İşi
+Dönem: 01.06.2025 – 31.05.2026
+
+1. TANIMLAR VE KISALTMALAR
+İSPER: İstanbul Personel A.Ş.
+Yüklenici: İhale sonucu sözleşme imzalayan firma
+Hat: Belirlenen güzergah üzerinde işleyen araç seferi
+
+2. HİZMETİN KAPSAMI VE SÜRESİ
+Hizmet süresi 12 ay olup yaklaşık 850 personel/gün,
+21 hat üzerinden taşınacaktır.
+Sabah seferleri: 06:30–09:00 | Akşam: 17:30–20:00
+
+3. ARAÇLARA İLİŞKİN TEKNİK KOŞULLAR
+- Model yılı 2020 ve üzeri
+- Kapasite: 14–26 koltuk (hat bazlı tablo Ek-1)
+- Zorunlu donanım: Klima, emniyet kemeri (tüm koltuklar),
+  araç takip sistemi (GPS), yangın söndürücü, ilk yardım kiti
+- Tercih edilen yakıt: elektrikli; dizel/LPG kabul edilir
+
+4. SÜRÜCÜ VE PERSONEL KOŞULLARI
+- En az 3 yıl mesleki deneyim
+- SRC belgesi ve psikoteknik rapor zorunlu
+...
+─────────────────────────────────────
+✓ Çok daha güçlü bir başlangıç noktası.
+Kontrol ve düzenleme süresi belirgin
+şekilde kısalır.`
+  },
+  rapor: {
+    bad:  `BİO MART 2025 RAPORU
+
+Bu ay bölgesel istihdam ofislerimiz faaliyetlerine
+devam etmiştir.
+
+Toplam başvuru sayısı artmıştır.
+Kadın adaylara yönelik etkinlikler düzenlenmiştir.
+Firmalarla görüşmeler sürdürülmektedir.
+
+─────────────────────────────────────
+⚠ Rakam yok, yorum yok, karar yok.
+Kim okursa okusun hiçbir aksiyon
+alamaz. Yönetim değeri sıfır.`,
+    good: `── ÜST YÖNETİM ÖZETİ (1 Sayfa) ──────────────
+
+Mart 2025 kümülatif istihdam: 8.742 kişi
+Dönem hedefi: 9.500 | Gerçekleşme: %92,0
+Şubat'a göre değişim: +412 kişi (+4,9%)
+
+⚠ Risk: Bağcılar ve Sultangazi ofisleri hedefin
+%67'sinde; olası neden — yetersiz firma çeşitliliği.
+
+Aksiyon: İki ofis için 30 günlük firma ziyaret planı
+Sorumlu: BİO Koordinatörlüğü | Süre: 15 Nisan'a kadar
+
+── BİO KOORDİNATÖRLÜĞÜ ANALİZİ ──────────────
+
+Hedefi Tutturan Ofisler (>%100): Kadıköy, Üsküdar, Beşiktaş
+Hedefin Altında (<80%): Bağcılar (%67), Sultangazi (%71)...
+
+Kadın aday yerleştirme: 412 / 5.478 toplam
+Özel gereksinimli: 87 / 1.930 toplam
+...
+─────────────────────────────────────
+✓ Üç farklı okuyucu için ayrı format.
+Rakam odaklı, yorum gerekçeli — çok
+daha az düzeltmeyle kullanılabilir.`
+  },
+  isg: {
+    bad:  `RİSK DEĞERLENDİRME RAPORU
+
+Çalışma ortamı genel olarak güvenlidir.
+Dikkat edilmesi gereken hususlar:
+- Ağır yük taşımaktan kaçının
+- Güvenlik ekipmanı kullanın
+- Acil çıkışları bilin
+
+Önlemler:
+- Eğitim verilecektir
+- Denetim yapılacaktır
+
+─────────────────────────────────────
+⚠ Mevzuata uygun değil. L matris yok,
+KKD matrisi yok. Denetime sunamaz,
+imzalanamaz, hukuki geçerliliği olmaz.`,
+    good: `RİSK DEĞERLENDİRME RAPORU
+OSO Saha Operasyonları | Haziran 2025
+
+1. DEĞERLENDİRME EKİBİ
+İSG Uzmanı: [Ad Soyad] | Birim Amiri: [Ad Soyad]
+Tarih: 02.06.2025 | Yeniden Değerlendirme: 02.12.2025
+
+2. ÇALIŞMA ORTAMI
+Açık saha, araçlı güzergah, gündüz/gece dönüşümlü vardiya
+Çalışan sayısı: 48 | KKD mevcut: baret, yelek, eldiven
+
+3. TEHLİKE TABLOSU (özet)
+Trafik kazası     | Saha okuyucu | Yüksek görünürlük yeleği
+Düşme/kayma       | Tüm saha     | Kaymaz tabanlı bot
+Elektrik teması   | Sayaç erişim | Yalıtımlı eldiven
+
+4. L MATRİS PUANLAMA
+Trafik kazası:  Olasılık 3 × Şiddet 5 = 15 → YÜKSEK
+Düşme/kayma:    Olasılık 4 × Şiddet 3 = 12 → YÜKSEK
+Elektrik temas: Olasılık 2 × Şiddet 5 = 10 → YÜKSEK
+
+5. AKSİYON PLANI
+Trafik: Araç içi emniyet kemeri denetimi | ISG Uzmanı | 15 gün
+...
+─────────────────────────────────────
+✓ Metodoloji ve format doğru kurulmuş.
+Uzman gözden geçirmesiyle çok daha hızlı
+nihai hale getirilebilir.`
+  }
+};
+
+function toggleOutput(id) {
+  const body = document.getElementById('out-body-' + id);
+  const btn  = document.getElementById('out-btn-'  + id);
+  const open = body.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+let currentExample = 'sartname';
+
+function showExample(key) {
+  currentExample = key;
+  ['sartname','rapor','oso','isg'].forEach(k => {
+    document.getElementById('btn-'+k).classList.toggle('active', k===key);
+  });
+  const ex  = examples[key];
+  const out = outputs[key];
+
+  function outputBlock(type, id) {
+    if (!out) return '';
+    const label = type === 'bad' ? '⚠ Yapay zekanın ürettiği çıktı' : '✓ Yapay zekanın ürettiği çıktı';
+    return `
+      <button class="ex-output-toggle" id="out-btn-${id}" onclick="toggleOutput('${id}')">
+        <span>Çıktıyı gör</span><i class="arrow">▼</i>
+      </button>
+      <div class="ex-output-body" id="out-body-${id}">
+        <div class="ex-output-label">${label}</div>
+        <div class="ex-output-text">${out[type]}</div>
+      </div>`;
+  }
+
+  document.getElementById('example-area').innerHTML = `
+    <div class="example-box ex-bad">
+      <div class="ex-header">
+        <div class="ex-dot"></div>
+        <span class="ex-label">Belirsiz prompt</span>
+        <span class="ex-tag">Zayıf bağlam</span>
+      </div>
+      <div class="ex-content">
+        <div class="ex-prompt">${ex.bad.prompt}</div>
+        <div class="ex-why">⚠ ${ex.bad.why}</div>
+        ${outputBlock('bad', key+'-bad')}
+      </div>
+    </div>
+    <div class="example-box ex-good">
+      <div class="ex-header">
+        <div class="ex-dot"></div>
+        <span class="ex-label">Güçlü prompt</span>
+        <span class="ex-tag">Yerleşik bağlam</span>
+      </div>
+      <div class="ex-content">
+        <div class="ex-prompt">${ex.good.prompt}</div>
+        <div class="ex-why">✓ ${ex.good.why}</div>
+        ${outputBlock('good', key+'-good')}
+      </div>
+    </div>
+  `;
+}
+
+showExample('sartname');
+
+// TIMELINE
+const SLIDES = [
+  {file:'../1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html', year:'B1', label:'Bölüm 1', cover:true},
+  {file:'16-bolum2-kapak.html', year:'B2', label:'Kap.', cover:true},
+  {file:'17-model-haritasi.html', year:'Hrt', label:'Harita'},
+  {file:'18-leaderboard.html', year:'Sır', label:'Sıralama'},
+  {file:'21-bagiam-prompt.html', year:'Prmt', label:'Prompt'},
+  {file:'22-ekip-arkadasi.html', year:'Bilgi', label:'Bilgi Çöküşü'},
+  {file:'20-araclar.html', year:'Araç', label:'Modeller'},
+];
+
+function toggleFS(){
+  if(window.parent!==window){window.parent.postMessage({action:'toggleFS'},'*'); return;}
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') window.location.href='22-ekip-arkadasi.html';
+  if(e.key==='ArrowLeft')  window.location.href='18-leaderboard.html';
+});
+</script>
+<script src="assets/chapter2-divider.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

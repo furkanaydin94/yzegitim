@@ -1,0 +1,813 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI İDE'leri ve Claude Code Araçları - Bölüm 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #04080f;
+      --surface: #0d1526;
+      --surface2: #111e35;
+      --surface3: #0a1020;
+      --border: rgba(255, 255, 255, 0.07);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --tl-h: 68px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 72% 20%, rgba(16, 185, 129, 0.055) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 15% 80%, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
+    }
+
+    .layout {
+      display: flex;
+      height: calc(100vh - var(--tl-h));
+      position: relative;
+      z-index: 1;
+    }
+
+    .left-panel {
+      width: 48%;
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 24px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .left-panel::-webkit-scrollbar,
+    .rp-inner::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    .left-panel::-webkit-scrollbar-thumb,
+    .rp-inner::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 2px;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+      pointer-events: none;
+    }
+
+    .v-divider {
+      width: 5px;
+      flex-shrink: 0;
+      cursor: col-resize;
+      background: var(--border);
+      transition: background 0.2s;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .v-divider:hover,
+    .v-divider.dragging {
+      background: rgba(16, 185, 129, 0.3);
+    }
+
+    .v-divider::after {
+      content: '';
+      width: 2px;
+      height: 32px;
+      border-radius: 1px;
+      background: rgba(255, 255, 255, 0.12);
+      transition: background 0.2s;
+    }
+
+    .v-divider:hover::after,
+    .v-divider.dragging::after {
+      background: rgba(16, 185, 129, 0.6);
+    }
+
+    .right-panel {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rp-inner {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px 92px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ─── SLIDE BADGE ────────────────────────────────────────── */
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--accent);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      align-self: flex-start;
+    }
+
+    .slide-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ─── LEFT PANEL: SURFACE CARDS ─────────────────────────── */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .surface-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .surface-card,
+    .cli-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .surface-card.primary {
+      border-color: rgba(16, 185, 129, 0.34);
+      background: rgba(16, 185, 129, 0.055);
+    }
+
+    .surface-kicker {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .surface-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .surface-desc {
+      min-height: 56px;
+      font-size: 12.5px;
+      color: var(--muted2);
+      line-height: 1.6;
+    }
+
+    .surface-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .surface-list li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.45;
+    }
+
+    .surface-list li::before {
+      content: '✓';
+      color: #34d399;
+      font-size: 11px;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    .cli-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .cli-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .cmd-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #052016;
+      background: var(--accent);
+      border-radius: 8px;
+      padding: 9px 12px;
+      white-space: nowrap;
+    }
+
+    .cli-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+
+    .cli-desc {
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.55;
+    }
+
+    /* ─── RIGHT PANEL: TOOL SECTION ─────────────────────────── */
+    .tool-section {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tool-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+
+    .tool-item .ti-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .tool-item .ti-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 3px 10px;
+      border-radius: 5px;
+    }
+
+    .tool-item .ti-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .tool-item .ti-desc {
+      font-size: 12.5px;
+      color: var(--muted2);
+      line-height: 1.65;
+    }
+
+    .tool-item .ti-desc strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .tool-item .ti-example {
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .tool-item .ti-example .hl {
+      color: #34d399;
+    }
+
+    .cmd-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .cmd-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .cmd-desc {
+      font-size: 12px;
+      color: var(--muted2);
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .sc-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 8px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .sc-card:hover {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sc-icon-sm {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .sc-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .diagram-box {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .d-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+
+    .node {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      min-width: 100px;
+    }
+
+    .node.main {
+      border-color: var(--accent);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .node.sub {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.07);
+    }
+
+    .node-lbl {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .main .node-lbl {
+      color: #34d399;
+    }
+
+    .sub .node-lbl {
+      color: #7dd3fc;
+    }
+
+    .node-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .d-arrow {
+      color: var(--muted);
+      font-size: 16px;
+      margin: 2px 0;
+      display: block;
+    }
+
+    /* ─── NAV ────────────────────────────────────────────────── */
+    .nav-buttons {
+      position: fixed;
+      bottom: calc(var(--tl-h) + 12px);
+      right: 16px;
+      display: flex;
+      gap: 6px;
+      z-index: 300;
+    }
+
+    .nav-btn {
+      background: rgba(13, 21, 38, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      color: var(--muted2);
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      transition: all 0.18s;
+    }
+
+    .nav-btn:hover {
+      background: var(--surface2);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+
+    .nav-btn.next {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .nav-btn.next:hover {
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    /* ─── TIMELINE ───────────────────────────────────────────── */
+
+    /* ─── FULLSCREEN BTN ─────────────────────────────────────── */
+    .fs-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 200;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .fs-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ─── ANIMATIONS ─────────────────────────────────────────── */
+    .fadeUp {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: fadeUpAnim 0.48s ease forwards;
+    }
+
+    .fadeUp-2 { animation-delay: 0.08s; }
+    .fadeUp-3 { animation-delay: 0.16s; }
+    .fadeUp-4 { animation-delay: 0.24s; }
+    .fadeUp-5 { animation-delay: 0.32s; }
+
+    @keyframes fadeUpAnim {
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 1100px) {
+      .surface-grid { grid-template-columns: 1fr; }
+      .surface-desc { min-height: auto; }
+      .cli-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter3-theme.css">
+</head>
+
+<body>
+<script>
+window.CHAPTER3_SLIDES = [
+  { file: '23-bolum3-kapak.html', year: 'B3', label: 'Kapak', cover: true },
+  { file: '24-ai-ideler.html', year: 'IDE', label: "AI IDE'ler" },
+  { file: '28-n8n.html', year: 'n8n', label: 'n8n Otomasyon' },
+  { file: '29-uygulamalar.html', year: 'App', label: 'Uygulamalar' },
+  { file: '30-local-llm.html', year: 'LLM', label: 'Yerel LLM' },
+  { file: '34-ft-vs-rag.html', year: 'RAG', label: 'FT vs RAG' },
+  { file: '35-kurumsal-ai.html', year: 'AI', label: 'Kurumsal AI' },
+  { file: '36-gelecek.html', year: 'Gelecek', label: 'Gelecek' }
+];
+</script>
+<nav class="htl">
+  <div class="htl-label">Bolum 3<b>Teknik Kullanim</b></div>
+  <div class="htl-track"><div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div><div class="htl-items" id="htlItems"></div></div>
+  <div class="htl-progress"><b id="prog">1</b> / <span id="progTotal">8</span></div>
+</nav>
+
+
+  <div class="layout">
+
+    <!-- LEFT PANEL: Masaüstü araçları -->
+    <div class="left-panel" id="leftPanel">
+      <div id="leftInner" style="display:flex;flex-direction:column;gap:inherit;min-height:min-content;">
+
+        <div class="fadeUp">
+          <div class="slide-badge">Bölüm 3 · Masaüstü Araçları</div>
+        </div>
+
+        <section class="fadeUp fadeUp-2">
+          <div class="section-label">Masaüstü seçenekleri</div>
+          <div class="surface-grid">
+            <article class="surface-card primary">
+              <div class="surface-kicker">Temel ortam</div>
+              <div class="surface-title">VS Code</div>
+              <p class="surface-desc">Klasörü açtığımız, eklentileri kurduğumuz ve uygulama demosunu yürüteceğimiz ana çalışma alanı.</p>
+              <ul class="surface-list">
+                <li>Codex ve Claude eklentileri burada gösterilecek.</li>
+                <li>Dosya ağacı, terminal ve kod aynı ekranda kalır.</li>
+                <li>Canlı uygulama akışına en net geçiş buradan olur.</li>
+              </ul>
+            </article>
+
+            <article class="surface-card">
+              <div class="surface-kicker">OpenAI tarafı</div>
+              <div class="surface-title">Codex</div>
+              <p class="surface-desc">Kod tabanını okuyup değişiklik öneren, dosya düzenleyen ve test adımlarına eşlik eden çalışma arkadaşı.</p>
+              <ul class="surface-list">
+                <li>Repo bağlamını takip eder.</li>
+                <li>Kod değişikliği ve inceleme işlerinde kullanılır.</li>
+                <li>VS Code veya terminal akışına bağlanabilir.</li>
+              </ul>
+            </article>
+
+            <article class="surface-card">
+              <div class="surface-kicker">Masaüstü asistan</div>
+              <div class="surface-title">Claude Desktop</div>
+              <p class="surface-desc">Claude'u bilgisayar tarafındaki dosya ve bağlantılı araçlarla daha görsel bir arayüzde kullanma yolu.</p>
+              <ul class="surface-list">
+                <li>Yerel dosya ve araç bağlantıları fikrini somutlaştırır.</li>
+                <li>MCP bağlantıları için anlaşılır bir giriş sağlar.</li>
+                <li>Kod dışı iş akışlarında da kullanılabilir.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="fadeUp fadeUp-3">
+          <div class="section-label">Terminal / CLI</div>
+          <div class="cli-wrap">
+            <div class="cli-card">
+              <div class="cmd-pill">codex</div>
+              <div>
+                <div class="cli-title">OpenAI ajanı terminalde</div>
+                <div class="cli-desc">Proje klasöründe doğrudan komutla çalışır; dosya değişikliklerini ve kontrolleri aynı oturumda yürütür.</div>
+              </div>
+            </div>
+            <div class="cli-card">
+              <div class="cmd-pill">claude</div>
+              <div>
+                <div class="cli-title">Claude Code terminalde</div>
+                <div class="cli-desc">Slash command, agent, skill ve proje hafızası akışlarını doğrudan klasör içinde çalıştırır.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <div class="v-divider" id="divider"></div>
+
+    <!-- RIGHT PANEL: Claude Code araçları -->
+    <div class="right-panel" id="rightPanel">
+      <div class="rp-inner" id="rightInner">
+        <div class="tool-section">
+
+          <!-- CLAUDE.md -->
+          <div class="tool-item fadeUp">
+            <div class="ti-header">
+              <span class="ti-tag">CLAUDE.md</span>
+              <span class="ti-title">Proje hafızası</span>
+            </div>
+            <div class="ti-desc">Claude her konuşmada bu dosyayı okur. "Projeyi başlatmadan önce bilmen gerekenler" gibi düşün.</div>
+            <div class="ti-example"><span class="hl"># CLAUDE.md</span>
+Dil: TypeScript, NPM, Jest (prod veritabanına dokunma!)</div>
+          </div>
+
+          <!-- Slash Commands -->
+          <div class="tool-item fadeUp fadeUp-2">
+            <div class="ti-header">
+              <span class="ti-tag">/komutlar</span>
+              <span class="ti-title">Slash Commands</span>
+            </div>
+            <div class="ti-desc">Claude Code içinde <strong>/</strong> ile başlayan yerleşik kısayollar.</div>
+            <div class="cmd-list">
+              <div class="cmd-row"><span class="cmd-name">/help</span><span class="cmd-desc">Tüm komutları listeler</span></div>
+              <div class="cmd-row"><span class="cmd-name">/compact</span><span class="cmd-desc">Context'i sıkıştırır</span></div>
+              <div class="cmd-row"><span class="cmd-name">/review</span><span class="cmd-desc">Kodu gözden geçirir</span></div>
+              <div class="cmd-row"><span class="cmd-name">/commit</span><span class="cmd-desc">Git commit + mesaj oluşturma</span></div>
+              <div class="cmd-row"><span class="cmd-name">/agents</span><span class="cmd-desc">Subagent'ları listeler / çağırır</span></div>
+            </div>
+          </div>
+
+          <!-- Official Skills -->
+          <div class="tool-item fadeUp fadeUp-3">
+            <div class="ti-header">
+              <span class="ti-tag">skills/</span>
+              <span class="ti-title">Resmi Skill'ler (16 adet)</span>
+            </div>
+            <div class="ti-desc">Anthropic'in sunduğu hazır yetenekler. İlgili görev geldiğinde <strong>otomatik tetiklenirler</strong> veya <code>/skill-adı</code> ile çağrılırlar.</div>
+            <div class="skills-grid">
+              <div class="sc-card"><span class="sc-icon-sm">📄</span><div><div class="sc-title">PDF</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">📊</span><div><div class="sc-title">Excel (xlsx)</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">📝</span><div><div class="sc-title">Word (docx)</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">📽️</span><div><div class="sc-title">PowerPoint</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🎨</span><div><div class="sc-title">Frontend Design</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🖼️</span><div><div class="sc-title">Canvas Design</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🧪</span><div><div class="sc-title">Webapp Testing</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🔌</span><div><div class="sc-title">MCP Builder</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🎭</span><div><div class="sc-title">Algorithmic Art</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🏷️</span><div><div class="sc-title">Brand Guidelines</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🎨</span><div><div class="sc-title">Theme Factory</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🧩</span><div><div class="sc-title">Web Artifacts</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">📋</span><div><div class="sc-title">Doc Co-authoring</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">📢</span><div><div class="sc-title">Internal Comms</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🤖</span><div><div class="sc-title">Skill Creator</div></div></div>
+              <div class="sc-card"><span class="sc-icon-sm">🎞️</span><div><div class="sc-title">Slack GIF</div></div></div>
+            </div>
+          </div>
+
+          <!-- Multi-Agent Architecture -->
+          <div class="tool-item fadeUp fadeUp-4">
+            <div class="ti-header">
+              <span class="ti-tag">agents/</span>
+              <span class="ti-title">Multi-Agent Mimarisi</span>
+            </div>
+            <div class="ti-desc">Karmaşık görevleri paralel uzmanlara dağıtan orkestrasyon.</div>
+            <div class="diagram-box">
+              <div class="d-row">
+                <div class="node main">
+                  <div class="node-lbl">Slash Command</div>
+                  <div class="node-name">/sartname</div>
+                </div>
+              </div>
+              <span class="d-arrow">↓ paralel dağıtır</span>
+              <div class="d-row">
+                <div class="node sub">
+                  <div class="node-lbl">Ajan 1</div>
+                  <div class="node-name">Teknik Uzman</div>
+                </div>
+                <div class="node sub">
+                  <div class="node-lbl">Ajan 2</div>
+                  <div class="node-name">Hukuk Müşaviri</div>
+                </div>
+              </div>
+              <span class="d-arrow">↓ birleştirilir</span>
+              <div class="node main" style="display:inline-block; margin:0 auto;">
+                <div class="node-lbl">Ajan 3</div>
+                <div class="node-name">Kalite Kontrolcü</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.location.href='23-bolum3-kapak.html'">← Geri</button>
+    <button class="nav-btn next" onclick="window.location.href='28-n8n.html'">Sıradaki: n8n →</button>
+  </div>
+
+  
+<script src="assets/chapter3-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+
+</html>
