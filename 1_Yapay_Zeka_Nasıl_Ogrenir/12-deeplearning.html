@@ -1,0 +1,326 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 · Derin Öğrenme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#F59E0B; --accent-soft:#FEF3C7; }
+
+/* Visual node hover */
+.cnn-node .node-rect { transition: filter 0.25s, stroke-width 0.25s; }
+.cnn-node:hover .node-rect { filter: drop-shadow(0 0 6px rgba(245,158,11,0.5)); stroke-width: 2.5; }
+.cnn-node.selected .node-rect { filter: drop-shadow(0 0 12px rgba(245,158,11,0.6)); stroke-width: 2.5; }
+
+.cnn-wrap {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cnn-svg-container { width: 100%; }
+
+.cnn-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  min-height: 70px;
+  transition: border-color 0.3s;
+}
+.cnn-info.highlight { border-color: var(--accent); }
+.cnn-info-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
+.cnn-info-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink); margin-bottom: 4px;
+}
+.cnn-info-text { font-size: 13px; color: var(--muted); line-height: 1.55; }
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">9</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">10</span>
+        <span>Derin Öğrenme</span>
+        <span class="dash"></span>
+        <span>2012</span>
+      </div>
+      <h1 class="fadeUp d2">Büyük veri + GPU +<br>derin ağ = <span class="hl">modern YZ.</span></h1>
+      <p class="lede fadeUp d3">
+        Deep Learning, görüntü, ses ve metni <strong>aynı çerçeveyle</strong> işleyebilen genel bir öğrenme mimarisidir.
+        2012'de ImageNet'te patlama yaptı — ama asıl önemi bugün ChatGPT gibi LLM'lerin de tam bu temel üzerine inşa edilmiş olmasıdır.
+      </p>
+
+      <div class="cards fadeUp d4">
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
+          <div>
+            <h3>Görüntü · Ses · Metin</h3>
+            <p>Face ID, Siri, ChatGPT, Whisper — hepsi Deep Learning mimarisinin farklı uygulamalarıdır. Aynı temel, farklı veri türleri.</p>
+          </div>
+        </div>
+        <div class="card alt">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div>
+            <h3>AlexNet 2012 — Kırılım Noktası</h3>
+            <p>ImageNet yarışmasında %83.6 doğrulukla önceki rekoru <strong>%10 farkla</strong> geçti. GPU + Büyük Veri + Derin Ağ üçlüsü artık bir paradigmaydı.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="10-backprop.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="13-embedding.html" class="primary">Embedding<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">10 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right">
+    <div class="viz-head"><span class="dot"></span><span>Görsel Model Nasıl "Görür"? — Bir katmana tıkla</span></div>
+
+    <div class="cnn-wrap">
+      <div class="cnn-svg-container">
+        <svg id="cnnSvg" viewBox="0 0 720 200" preserveAspectRatio="xMidYMid meet" style="width:100%;height:200px;overflow:visible;">
+          <!-- Animated particle -->
+          <circle id="particle" r="5" fill="#F59E0B" opacity="0">
+            <animateMotion id="particleAnim" dur="2.4s" repeatCount="indefinite"
+              path="M 36,100 L 130,100 L 224,100 L 318,100 L 412,100 L 506,100 L 600,100 L 684,100"
+              calcMode="linear"/>
+          </circle>
+
+          <!-- Connectors -->
+          <line x1="72" y1="100" x2="94" y2="100" stroke="#E5E4DE" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <line x1="166" y1="100" x2="188" y2="100" stroke="#E5E4DE" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <line x1="260" y1="100" x2="282" y2="100" stroke="#E5E4DE" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <line x1="354" y1="100" x2="376" y2="100" stroke="#E5E4DE" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <line x1="448" y1="100" x2="470" y2="100" stroke="#E5E4DE" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <line x1="542" y1="100" x2="564" y2="100" stroke="#E5E4DE" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+          <!-- Arrow heads -->
+          <polygon points="94,96 106,100 94,104" fill="rgba(245,158,11,0.4)"/>
+          <polygon points="188,96 200,100 188,104" fill="rgba(245,158,11,0.4)"/>
+          <polygon points="282,96 294,100 282,104" fill="rgba(245,158,11,0.4)"/>
+          <polygon points="376,96 388,100 376,104" fill="rgba(245,158,11,0.4)"/>
+          <polygon points="470,96 482,100 470,104" fill="rgba(245,158,11,0.4)"/>
+          <polygon points="564,96 576,100 564,104" fill="rgba(245,158,11,0.4)"/>
+
+          <!-- Node 0: Input Image -->
+          <g class="cnn-node" id="node0" onclick="selectNode(0)" style="cursor:pointer;">
+            <rect x="0" y="60" width="72" height="80" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" class="node-rect"/>
+            <rect x="10" y="70" width="8" height="8" rx="1" fill="#d97706"/><rect x="20" y="70" width="8" height="8" rx="1" fill="#f59e0b"/>
+            <rect x="30" y="70" width="8" height="8" rx="1" fill="#1e3a5f"/><rect x="40" y="70" width="8" height="8" rx="1" fill="#f59e0b"/>
+            <rect x="50" y="70" width="8" height="8" rx="1" fill="#d97706"/>
+            <rect x="10" y="80" width="8" height="8" rx="1" fill="#f59e0b"/><rect x="20" y="80" width="8" height="8" rx="1" fill="#1e3a5f"/>
+            <rect x="30" y="80" width="8" height="8" rx="1" fill="#d97706"/><rect x="40" y="80" width="8" height="8" rx="1" fill="#f59e0b"/>
+            <rect x="50" y="80" width="8" height="8" rx="1" fill="#b45309"/>
+            <rect x="10" y="90" width="8" height="8" rx="1" fill="#d97706"/><rect x="20" y="90" width="8" height="8" rx="1" fill="#f59e0b"/>
+            <rect x="30" y="90" width="8" height="8" rx="1" fill="#f59e0b"/><rect x="40" y="90" width="8" height="8" rx="1" fill="#1e3a5f"/>
+            <rect x="50" y="90" width="8" height="8" rx="1" fill="#f59e0b"/>
+            <rect x="10" y="100" width="8" height="8" rx="1" fill="#f59e0b"/><rect x="20" y="100" width="8" height="8" rx="1" fill="#b45309"/>
+            <rect x="30" y="100" width="8" height="8" rx="1" fill="#d97706"/><rect x="40" y="100" width="8" height="8" rx="1" fill="#f59e0b"/>
+            <rect x="50" y="100" width="8" height="8" rx="1" fill="#d97706"/>
+            <rect x="10" y="70" width="52" height="3" rx="1" fill="#F59E0B" opacity="0.5">
+              <animate attributeName="y" from="70" to="114" dur="1.8s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.5;0.2;0.5" dur="1.8s" repeatCount="indefinite"/>
+            </rect>
+            <text x="36" y="152" text-anchor="middle" fill="#525252" font-size="9" font-family="JetBrains Mono,monospace">Ham Piksel</text>
+          </g>
+
+          <!-- Node 1: Kenar -->
+          <g class="cnn-node" id="node1" onclick="selectNode(1)" style="cursor:pointer;">
+            <rect x="106" y="60" width="72" height="80" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" class="node-rect"/>
+            <line x1="116" y1="85" x2="168" y2="85" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="116" y1="93" x2="168" y2="93" stroke="#3b82f6" stroke-width="1.5" opacity="0.4"/>
+            <line x1="130" y1="100" x2="130" y2="130" stroke="#60a5fa" stroke-width="2.5"/>
+            <line x1="140" y1="100" x2="140" y2="130" stroke="#60a5fa" stroke-width="1" opacity="0.4"/>
+            <line x1="148" y1="100" x2="168" y2="130" stroke="#93c5fd" stroke-width="1.5" opacity="0.6"/>
+            <text x="142" y="152" text-anchor="middle" fill="#3b82f6" font-size="9" font-family="JetBrains Mono,monospace">Kenarlar</text>
+          </g>
+
+          <!-- Node 2: Doku -->
+          <g class="cnn-node" id="node2" onclick="selectNode(2)" style="cursor:pointer;">
+            <rect x="200" y="60" width="72" height="80" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" class="node-rect"/>
+            <rect x="210" y="72" width="7" height="7" rx="1" fill="#a78bfa" opacity="0.8"/>
+            <rect x="220" y="72" width="7" height="7" rx="1" fill="#a78bfa" opacity="0.3"/>
+            <rect x="230" y="72" width="7" height="7" rx="1" fill="#a78bfa" opacity="0.7"/>
+            <rect x="240" y="72" width="7" height="7" rx="1" fill="#a78bfa" opacity="0.2"/>
+            <rect x="250" y="72" width="7" height="7" rx="1" fill="#a78bfa" opacity="0.6"/>
+            <rect x="260" y="72" width="7" height="7" rx="1" fill="#a78bfa" opacity="0.4"/>
+            <rect x="210" y="82" width="7" height="7" rx="1" fill="#8b5cf6" opacity="0.3"/>
+            <rect x="220" y="82" width="7" height="7" rx="1" fill="#8b5cf6" opacity="0.8"/>
+            <rect x="230" y="82" width="7" height="7" rx="1" fill="#8b5cf6" opacity="0.4"/>
+            <rect x="240" y="82" width="7" height="7" rx="1" fill="#8b5cf6" opacity="0.7"/>
+            <rect x="250" y="82" width="7" height="7" rx="1" fill="#8b5cf6" opacity="0.5"/>
+            <rect x="260" y="82" width="7" height="7" rx="1" fill="#8b5cf6" opacity="0.9"/>
+            <circle cx="236" cy="116" r="14" stroke="#c4b5fd" stroke-width="2" fill="rgba(196,181,253,0.12)"/>
+            <text x="236" y="152" text-anchor="middle" fill="#8b5cf6" font-size="9" font-family="JetBrains Mono,monospace">Doku+Şekil</text>
+          </g>
+
+          <!-- Node 3: Özellik -->
+          <g class="cnn-node" id="node3" onclick="selectNode(3)" style="cursor:pointer;">
+            <rect x="294" y="60" width="72" height="80" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" class="node-rect"/>
+            <ellipse cx="330" cy="87" rx="16" ry="9" stroke="#22c55e" stroke-width="1.5" fill="rgba(34,197,94,0.08)"/>
+            <ellipse cx="323" cy="84" rx="4" ry="5" stroke="#4ade80" stroke-width="1.5" fill="rgba(74,222,128,0.15)"/>
+            <ellipse cx="337" cy="84" rx="4" ry="5" stroke="#4ade80" stroke-width="1.5" fill="rgba(74,222,128,0.15)"/>
+            <ellipse cx="330" cy="112" rx="14" ry="8" stroke="#16a34a" stroke-width="1.5" fill="rgba(22,163,74,0.08)"/>
+            <text x="330" y="152" text-anchor="middle" fill="#22c55e" font-size="9" font-family="JetBrains Mono,monospace">Göz·Kulak</text>
+          </g>
+
+          <!-- Node 4: Fully Connected -->
+          <g class="cnn-node" id="node4" onclick="selectNode(4)" style="cursor:pointer;">
+            <rect x="388" y="60" width="72" height="80" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" class="node-rect"/>
+            <circle cx="404" cy="80" r="4" fill="#F59E0B" opacity="0.7"/>
+            <circle cx="404" cy="100" r="4" fill="#F59E0B" opacity="0.5"/>
+            <circle cx="404" cy="120" r="4" fill="#F59E0B" opacity="0.7"/>
+            <circle cx="424" cy="88" r="4" fill="#fbbf24" opacity="0.6"/>
+            <circle cx="424" cy="112" r="4" fill="#fbbf24" opacity="0.8"/>
+            <circle cx="444" cy="100" r="5" fill="#F59E0B"/>
+            <line x1="408" y1="80" x2="420" y2="88" stroke="#F59E0B" stroke-width="1" opacity="0.4"/>
+            <line x1="408" y1="80" x2="420" y2="112" stroke="#F59E0B" stroke-width="1" opacity="0.2"/>
+            <line x1="408" y1="100" x2="420" y2="88" stroke="#F59E0B" stroke-width="1" opacity="0.3"/>
+            <line x1="408" y1="100" x2="420" y2="112" stroke="#F59E0B" stroke-width="1" opacity="0.4"/>
+            <line x1="408" y1="120" x2="420" y2="88" stroke="#F59E0B" stroke-width="1" opacity="0.2"/>
+            <line x1="408" y1="120" x2="420" y2="112" stroke="#F59E0B" stroke-width="1" opacity="0.3"/>
+            <line x1="428" y1="88" x2="439" y2="100" stroke="#fbbf24" stroke-width="1.5" opacity="0.5"/>
+            <line x1="428" y1="112" x2="439" y2="100" stroke="#fbbf24" stroke-width="1.5" opacity="0.5"/>
+            <text x="424" y="152" text-anchor="middle" fill="#F59E0B" font-size="9" font-family="JetBrains Mono,monospace">Birleştir</text>
+          </g>
+
+          <!-- Node 5: Output -->
+          <g class="cnn-node" id="node5" onclick="selectNode(5)" style="cursor:pointer;">
+            <rect x="482" y="60" width="72" height="80" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5" class="node-rect"/>
+            <text x="492" y="77" fill="#22c55e" font-size="8" font-family="JetBrains Mono,monospace">Köpek</text>
+            <rect x="492" y="80" width="54" height="6" rx="2" fill="#E5E4DE"/>
+            <rect x="492" y="80" width="51" height="6" rx="2" fill="#22c55e"/>
+            <text x="492" y="96" fill="#8A8A8A" font-size="8" font-family="JetBrains Mono,monospace">Kedi</text>
+            <rect x="492" y="99" width="54" height="6" rx="2" fill="#E5E4DE"/>
+            <rect x="492" y="99" width="5" height="6" rx="2" fill="#8A8A8A"/>
+            <text x="492" y="115" fill="#8A8A8A" font-size="8" font-family="JetBrains Mono,monospace">Kuş</text>
+            <rect x="492" y="118" width="54" height="6" rx="2" fill="#E5E4DE"/>
+            <rect x="492" y="118" width="3" height="6" rx="2" fill="#8A8A8A"/>
+            <rect x="492" y="128" width="54" height="10" rx="2" fill="rgba(34,197,94,0.15)" stroke="#22c55e" stroke-width="0.5"/>
+            <text x="519" y="136" text-anchor="middle" fill="#16a34a" font-size="7.5" font-family="JetBrains Mono,monospace" font-weight="700">✓ %94 Köpek!</text>
+            <text x="518" y="152" text-anchor="middle" fill="#F59E0B" font-size="9" font-family="JetBrains Mono,monospace">Sonuç</text>
+          </g>
+
+          <!-- Node 6: AlexNet -->
+          <g class="cnn-node" id="node6" onclick="selectNode(6)" style="cursor:pointer;">
+            <rect x="576" y="60" width="120" height="80" rx="6" fill="rgba(245,158,11,0.08)" stroke="#F59E0B" stroke-width="2" class="node-rect"/>
+            <text x="636" y="85" text-anchor="middle" fill="#d97706" font-size="10" font-family="Inter Tight,sans-serif" font-weight="700">AlexNet 2012</text>
+            <text x="636" y="103" text-anchor="middle" fill="#F59E0B" font-size="22" font-family="Inter Tight,sans-serif" font-weight="900">%83.6</text>
+            <text x="636" y="118" text-anchor="middle" fill="#8A8A8A" font-size="8.5" font-family="Inter,sans-serif">Önceki rekor: %73.8</text>
+            <text x="636" y="132" text-anchor="middle" fill="#22c55e" font-size="8.5" font-family="Inter,sans-serif" font-weight="700">▲ %10 sıçrama 🔥</text>
+            <text x="636" y="148" text-anchor="middle" fill="#d97706" font-size="9" font-family="Inter,sans-serif">ImageNet Şampiyonu</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="cnn-info" id="cnnInfo">
+        <div class="cnn-info-icon" id="cnnInfoIcon">🖼️</div>
+        <div>
+          <div class="cnn-info-label" id="cnnInfoLabel">Bir katmana tıkla</div>
+          <div class="cnn-info-text" id="cnnInfoText">Görsel modelin her katmanı farklı bir şey "görür" — ham pikselden anlama doğru ilerler.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const NODE_DATA = [
+  { icon:'🖼️', label:'Ham Piksel Girdisi', text:'Görüntü henüz anlamsız sayı matrisi. Her piksel 0–255 arası bir değer. Milyonlarca sayı — ama henüz hiçbir anlam yok.' },
+  { icon:'📐', label:'1. Katman — Kenar Algılama', text:'İlk katman yatay, dikey ve çapraz kenarları öğrenir. Tüm görüntü anlayışı bu basit çizgilerden başlar.' },
+  { icon:'🧩', label:'2. Katman — Doku ve Şekil', text:'Kenarlar birleşerek çemberler, dokular ve basit şekiller oluşturur. Henüz "köpek" yok, ama "kürk dokusu" var.' },
+  { icon:'👁️', label:'3. Katman — Üst Düzey Özellikler', text:'Artık gerçek anlamlı parçalar görünüyor: göz, kulak, burun. Model bunları daha önce hiç söylenmeden kendi başına öğrendi.' },
+  { icon:'🧠', label:'Fully Connected — Birleştirme', text:'Tüm öğrenilmiş özellikler tek bir karar katmanında birleştirilir. "Bunlar bir köpeğin özellikleri mi?" sorusu burada sorulur.' },
+  { icon:'✅', label:'Softmax Çıktısı', text:'Model %94 Köpek diyor. Softmax tüm olasılıkların toplamını 1 yapar. En yüksek olasılık kazanır.' },
+  { icon:'🏆', label:'AlexNet 2012 — Tarihin Kırılım Noktası', text:'Hinton ekibi ImageNet\'te %83.6 doğrulukla önceki rekoru %10 farkla geçti. GPU + Büyük Veri + Derin Ağ üçlüsü artık bir paradigmaydı.' },
+];
+
+function selectNode(idx) {
+  document.querySelectorAll('.cnn-node').forEach(n => n.classList.remove('selected'));
+  document.getElementById('node'+idx).classList.add('selected');
+  const d = NODE_DATA[idx];
+  document.getElementById('cnnInfoIcon').textContent = d.icon;
+  document.getElementById('cnnInfoLabel').textContent = d.label;
+  document.getElementById('cnnInfoText').textContent = d.text;
+  const card = document.getElementById('cnnInfo');
+  card.classList.add('highlight');
+  setTimeout(() => card.classList.remove('highlight'), 600);
+}
+
+window.addEventListener('load', () => {
+  document.getElementById('particle').setAttribute('opacity', '0.9');
+});
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '12-deeplearning.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '13-embedding.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '10-backprop.html';
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,777 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>17 · Model Haritası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter2-theme.css">
+<style>
+:root { --accent: #8B5CF6; --accent-soft: #F3E8FF; }
+
+/* Override right panel for chart */
+.right {
+  padding: 0;
+  background:
+    linear-gradient(rgba(20,20,20,0.035) 1px, transparent 1px) 0 0/38px 38px,
+    linear-gradient(90deg, rgba(20,20,20,0.035) 1px, transparent 1px) 0 0/38px 38px,
+    #fbfaf6;
+}
+
+/* Filter bar */
+.filter-bar {
+  padding: 10px 16px;
+  border-bottom: 1.5px solid var(--ink);
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  flex-shrink: 0;
+  background: rgba(255,255,252,0.94);
+  box-shadow: 0 8px 22px rgba(20,20,20,0.06);
+  backdrop-filter: blur(10px);
+}
+.filter-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--muted-2);
+  margin-right: 2px; white-space: nowrap;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.filter-btn {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 10px; font-weight: 600;
+  padding: 5px 11px;
+  border: 1.5px solid var(--line-soft);
+  background: var(--paper);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+}
+.filter-btn:hover { border-color: var(--ink); color: var(--ink); transform: translateY(-1px); }
+.filter-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); box-shadow: 2px 2px 0 rgba(20,20,20,0.16); }
+.filter-sep { width: 1.5px; height: 16px; background: var(--line-soft); margin: 0 4px; flex-shrink: 0; }
+
+.chart-area {
+  flex: 1; overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-soft) transparent;
+  background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(250,250,247,0.88));
+}
+.chart-area::-webkit-scrollbar { width: 4px; height: 5px; }
+.chart-area::-webkit-scrollbar-thumb { background: var(--line-soft); border-radius: 999px; }
+#chart-canvas { display: block; cursor: crosshair; image-rendering: auto; }
+
+.map-title {
+  font-size: 52px;
+  line-height: 0.96;
+  letter-spacing: -0.015em;
+}
+.map-title .hl {
+  background: linear-gradient(180deg, transparent 0 64%, var(--accent) 64% 82%, transparent 82%);
+  padding: 0 2px;
+}
+@media (max-width: 900px) {
+  .map-title { font-size: 38px; }
+}
+
+/* Tooltip */
+.tt {
+  position: fixed;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--ink);
+  pointer-events: none;
+  z-index: 500;
+  max-width: 220px;
+  line-height: 1.6;
+  display: none;
+  box-shadow: 4px 4px 0 var(--ink);
+  border-radius: 8px;
+}
+.tt.show { display: block; }
+.tt strong { font-family: 'Inter Tight', sans-serif; font-size: 13px; display: block; margin-bottom: 2px; font-weight: 700; }
+.tt em { color: var(--muted); font-style: normal; font-size: 11px; }
+.tt-note { color: var(--muted); font-size: 11px; margin-top: 3px; display: block; }
+.tt-badge {
+  display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; padding: 2px 6px; margin-right: 3px; font-weight: 600;
+  vertical-align: middle; letter-spacing: 0.06em;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP TIMELINE -->
+<nav class="htl" id="htl">
+  <div class="htl-label">Bölüm 2<b>Harita</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">3</b> / 7</div>
+</nav>
+
+<div class="slide">
+  <!-- LEFT -->
+  <div class="left fadeUp">
+    <div>
+      <div class="eyebrow d1">
+        <span class="num">17</span>
+        <span>Bölüm 2 · Model Ekosistemi</span>
+      </div>
+      <h1 class="map-title d2" style="margin-top:20px;">Model<br><span class="hl">yayın</span><br>ivmesi.</h1>
+    </div>
+
+    <div class="d3">
+      <p class="lede">
+        Kasım 2022'den bu yana yayınlanan büyük dil modellerinin sayısı üstel bir artış gösteriyor.
+        Sağdaki zaman çizelgesi, hem <strong>kapalı</strong> hem <strong>açık kaynak</strong> modellerin
+        yayınlanma sıklığını görselleştiriyor.
+      </p>
+    </div>
+
+    <div class="note-box d3" style="animation-delay:.14s;">
+      <strong>Renk kodlaması:</strong> Üst yarı <span style="color:#F59E0B;font-weight:600;">kapalı kaynak</span> modeller
+      (OpenAI, Anthropic, Google…), alt yarı <span style="color:#22C55E;font-weight:600;">açık ağırlık</span> modeller
+      (Meta, DeepSeek, Qwen…). Her iki grup da aynı ivmeyle büyüyor.
+    </div>
+
+    <div class="foot d4" style="animation-delay:.2s;">
+      <div class="nav">
+        <a href="16-bolum2-kapak.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Geri
+        </a>
+        <a href="18-leaderboard.html" class="primary">
+          Sıralama
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+      <span class="pageno">17 / 22</span>
+    </div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="divider" id="divider"></div>
+
+  <!-- RIGHT: Canvas Chart -->
+  <div class="right" id="rightPanel">
+    <div class="filter-bar">
+      <span class="filter-label">Kaynak:</span>
+      <button class="filter-btn src-btn active" onclick="setFilter('all',this)">Tümü</button>
+      <button class="filter-btn src-btn" onclick="setFilter('closed',this)">Kapalı</button>
+      <button class="filter-btn src-btn" onclick="setFilter('open',this)">Açık</button>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Yıl:</span>
+      <button class="filter-btn yr-btn active" onclick="setYear('all',this)">Tümü</button>
+      <button class="filter-btn yr-btn" onclick="setYear('2023',this)">2023</button>
+      <button class="filter-btn yr-btn" onclick="setYear('2024',this)">2024</button>
+      <button class="filter-btn yr-btn" onclick="setYear('2025',this)">2025</button>
+      <button class="filter-btn yr-btn" onclick="setYear('2026',this)">2026</button>
+      <div style="flex:1;"></div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--muted-2);">2023-2026 model yayınları</span>
+    </div>
+    <div class="chart-area" id="chartArea">
+      <canvas id="chart-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="tt" id="tt"></div>
+
+<script>
+// ─── DATA ─────────────────────────────────────
+const CLOSED = ['OpenAI','Google','Anthropic','xAI','Meta AI'];
+const OPEN   = ['Meta','Alibaba','DeepSeek','Moonshot AI','Google Gemma','Mistral AI'];
+
+const COL = {
+  'OpenAI':'#10b981','Google':'#3b82f6','Anthropic':'#f59e0b','xAI':'#818cf8',
+  'Meta AI':'#0f766e','Meta':'#22c55e','Alibaba':'#f97316','DeepSeek':'#60a5fa',
+  'Moonshot AI':'#fb923c','Google Gemma':'#a78bfa','Mistral AI':'#ef4444'
+};
+
+const MODELS = [
+  // OpenAI
+  {c:'OpenAI',n:'GPT-4',d:'2023-03',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-4 Turbo',d:'2023-11',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-4o',d:'2024-05',t:'closed',m:1},
+  {c:'OpenAI',n:'o1-preview',d:'2024-09',t:'closed',m:1},
+  {c:'OpenAI',n:'o1',d:'2024-12',t:'closed',m:1},
+  {c:'OpenAI',n:'o3-mini',d:'2025-01',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-4.5',d:'2025-02',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-4.1',d:'2025-04',t:'closed',m:1},
+  {c:'OpenAI',n:'o3',d:'2025-04',t:'closed',m:1},
+  {c:'OpenAI',n:'o4-mini',d:'2025-04',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-5',d:'2025-08',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-5.1',d:'2025-11',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-5.2',d:'2025-12',t:'closed',m:1},
+  {c:'OpenAI',n:'GPT-5.3-Codex',d:'2026-02',t:'closed',m:1,x:1},
+  {c:'OpenAI',n:'GPT-5.4',d:'2026-03',t:'closed',m:1,x:1},
+  {c:'OpenAI',n:'GPT-5.5',d:'2026-04',t:'closed',m:1,x:1},
+  // Google
+  {c:'Google',n:'Gemini 1.0',d:'2023-12',t:'closed',m:1},
+  {c:'Google',n:'Gemini 1.5 Pro',d:'2024-02',t:'closed',m:1},
+  {c:'Google',n:'Gemini 1.5 Flash',d:'2024-05',t:'closed',m:1},
+  {c:'Google',n:'Gemini 2.0 Pro',d:'2025-02',t:'closed',m:1},
+  {c:'Google',n:'Gemini 2.5 Pro',d:'2025-03',t:'closed',m:1},
+  {c:'Google',n:'Gemini 2.5 Flash',d:'2025-04',t:'closed',m:1},
+  {c:'Google',n:'Gemini 3 Pro',d:'2025-11',t:'closed',m:1},
+  {c:'Google',n:'Gemini 3 Flash',d:'2025-12',t:'closed',m:1},
+  {c:'Google',n:'Gemini 3.1 Pro',d:'2026-02',t:'closed',m:1,x:1},
+  {c:'Google',n:'Gemini 3.1 Flash',d:'2026-03',t:'closed',m:1,x:1},
+  // Anthropic
+  {c:'Anthropic',n:'Claude 2',d:'2023-07',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude 3 Opus',d:'2024-03',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude 3 Sonnet',d:'2024-03',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude 3.5 Sonnet',d:'2024-06',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude 3.7 Sonnet',d:'2025-02',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude 4 Opus',d:'2025-05',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude 4 Sonnet',d:'2025-05',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude Sonnet 4.5',d:'2025-09',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude Opus 4.5',d:'2025-11',t:'closed',m:1},
+  {c:'Anthropic',n:'Claude Sonnet 4.6',d:'2026-02',t:'closed',m:1,x:1},
+  {c:'Anthropic',n:'Claude Opus 4.6',d:'2026-02',t:'closed',m:1,x:1},
+  {c:'Anthropic',n:'Claude Opus 4.7',d:'2026-04',t:'closed',m:1,x:1},
+  // xAI
+  {c:'xAI',n:'Grok-1',d:'2023-11',t:'closed',m:1},
+  {c:'xAI',n:'Grok-1.5',d:'2024-05',t:'closed',m:1},
+  {c:'xAI',n:'Grok-2',d:'2024-08',t:'closed',m:1},
+  {c:'xAI',n:'Grok-3',d:'2025-02',t:'closed',m:1},
+  {c:'xAI',n:'Grok-3 mini',d:'2025-02',t:'closed',m:1},
+  {c:'xAI',n:'Grok-4',d:'2025-07',t:'closed',m:1},
+  {c:'xAI',n:'Grok Code Fast 1',d:'2025-08',t:'closed',m:1},
+  {c:'xAI',n:'Grok 4 Fast',d:'2025-09',t:'closed',m:1},
+  {c:'xAI',n:'Grok 4.1',d:'2025-11',t:'closed',m:1},
+  {c:'xAI',n:'Grok 4.1 Fast',d:'2025-12',t:'closed',m:1},
+  // Meta AI
+  {c:'Meta AI',n:'Muse Spark',d:'2026-04',t:'closed',m:1,x:1,note:'Kapalı kaynak Meta AI satırı'},
+  // Meta
+  {c:'Meta',n:'Llama 2',d:'2023-07',t:'open',m:1},
+  {c:'Meta',n:'Llama 3',d:'2024-04',t:'open',m:1},
+  {c:'Meta',n:'Llama 3.1',d:'2024-07',t:'open',m:1},
+  {c:'Meta',n:'Llama 3.2',d:'2024-09',t:'open',m:1},
+  {c:'Meta',n:'Llama 3.3',d:'2024-12',t:'open',m:1},
+  {c:'Meta',n:'Llama 4 Scout',d:'2025-04',t:'open',m:1},
+  {c:'Meta',n:'Llama 4 Maverick',d:'2025-04',t:'open',m:1},
+  {c:'Meta',n:'Llama 4 Behemoth preview',d:'2025-04',t:'open',m:1},
+  // Alibaba
+  {c:'Alibaba',n:'Qwen-7B',d:'2023-08',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen-72B',d:'2023-12',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen1.5',d:'2024-02',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen2',d:'2024-06',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen2.5',d:'2024-09',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen2.5-Max',d:'2025-01',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen3',d:'2025-04',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen3-Next',d:'2025-09',t:'open',m:1},
+  {c:'Alibaba',n:'Qwen3.5',d:'2026-02',t:'open',m:1,x:1},
+  {c:'Alibaba',n:'Qwen3.5-Omni',d:'2026-03',t:'open',m:1,x:1},
+  {c:'Alibaba',n:'Qwen3.6-Plus',d:'2026-04',t:'open',m:1,x:1},
+  {c:'Alibaba',n:'Qwen3.6-35B',d:'2026-04',t:'open',m:1,x:1},
+  // DeepSeek
+  {c:'DeepSeek',n:'DeepSeek Coder',d:'2023-09',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek LLM 67B',d:'2023-11',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek-V2',d:'2024-05',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek-V3',d:'2024-12',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek-R1',d:'2025-01',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek-R1-0528',d:'2025-05',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek-V3.2',d:'2025-12',t:'open',m:1},
+  {c:'DeepSeek',n:'DeepSeek-V4',d:'2026-04',t:'open',m:1,x:1},
+  // Moonshot AI
+  {c:'Moonshot AI',n:'Kimi Chat',d:'2023-10',t:'open',m:1},
+  {c:'Moonshot AI',n:'Kimi k1.5',d:'2025-01',t:'open',m:1},
+  {c:'Moonshot AI',n:'Kimi K2',d:'2025-07',t:'open',m:1},
+  {c:'Moonshot AI',n:'Kimi K2.5',d:'2026-01',t:'open',m:1,x:1},
+  {c:'Moonshot AI',n:'Kimi K2.6',d:'2026-04',t:'open',m:1,x:1},
+  // Google Gemma
+  {c:'Google Gemma',n:'Gemma 1.0',d:'2024-02',t:'open',m:1},
+  {c:'Google Gemma',n:'Gemma 2',d:'2024-07',t:'open',m:1},
+  {c:'Google Gemma',n:'Gemma 3',d:'2025-03',t:'open',m:1},
+  {c:'Google Gemma',n:'Gemma 3n',d:'2025-05',t:'open',m:1},
+  {c:'Google Gemma',n:'Gemma 4',d:'2026-04',t:'open',m:1,x:1},
+  // Mistral AI
+  {c:'Mistral AI',n:'Mistral 7B',d:'2023-09',t:'open',m:1},
+  {c:'Mistral AI',n:'Mixtral 8x7B',d:'2023-12',t:'open',m:1},
+  {c:'Mistral AI',n:'Mixtral 8x22B',d:'2024-04',t:'open',m:1},
+  {c:'Mistral AI',n:'Mistral Large 2',d:'2024-07',t:'open',m:1},
+  {c:'Mistral AI',n:'Mistral Small 3.1',d:'2025-03',t:'open',m:1},
+  {c:'Mistral AI',n:'Mistral Medium 3',d:'2025-05',t:'open',m:1},
+  {c:'Mistral AI',n:'Magistral',d:'2025-06',t:'open',m:1},
+];
+
+// ─── CHART ENGINE ────────────────────────────
+const BASE_W = 1400;
+let currentFilter = 'all';
+let currentYear = 'all';
+
+function parseDate(s){ const [y,m]=s.split('-').map(Number); return new Date(y,m-1,15); }
+function getCompanies(){
+  const all = [...CLOSED,...OPEN];
+  if(currentFilter==='all') return all;
+  return all.filter(c => MODELS.some(m => m.c===c && m.t===currentFilter));
+}
+
+function getViewRange(){
+  if(currentYear==='2023') return [new Date('2022-11-01'), new Date('2024-01-15')];
+  if(currentYear==='2024') return [new Date('2023-12-01'), new Date('2025-01-15')];
+  if(currentYear==='2025') return [new Date('2024-12-01'), new Date('2026-01-15')];
+  if(currentYear==='2026') return [new Date('2025-12-01'), new Date('2026-06-15')];
+  return [new Date('2022-11-01'), new Date('2026-06-01')];
+}
+
+function getVisible(cos){
+  const [vS,vE]=getViewRange();
+  return MODELS.filter(m=>{
+    if(!cos.includes(m.c)) return false;
+    if(currentFilter==='closed'&&m.t!=='closed') return false;
+    if(currentFilter==='open'&&m.t!=='open') return false;
+    const dt=parseDate(m.d);
+    return dt>=vS && dt<=vE;
+  });
+}
+
+function getDims(W){
+  const sc=W/BASE_W;
+  return {
+    sc,
+    LANE_H:    Math.round(Math.min(68, Math.max(56, 58*sc))),
+    HEADER_H:  Math.round(Math.min(58, Math.max(48, 50*sc))),
+    SECT_GAP:  Math.round(Math.min(18, Math.max(12, 14*sc))),
+    LEFT_W:    Math.round(Math.min(138, Math.max(98, 106*sc))),
+    RIGHT_PAD: Math.round(Math.min(28, Math.max(16, 18*sc))),
+    PILL_H:    Math.round(Math.min(22, Math.max(18, 19*sc))),
+    PILL_FS:   Math.min(10.8, Math.max(8.6, 8.9*sc)),
+    PILL_PAD:  Math.round(Math.min(10, Math.max(7, 7*sc))),
+    PILL_R:    Math.round(Math.min(6, Math.max(4, 5*sc))),
+    PILL_GAP:  Math.round(Math.min(9, Math.max(5, 5*sc))),
+    DOT_R:     Math.min(3.5, Math.max(2.5, 3*sc)),
+  };
+}
+
+function xOf(date,W,d){
+  const [vS,vE]=getViewRange();
+  const chartW=W-d.LEFT_W-d.RIGHT_PAD;
+  const ratio=Math.max(0,Math.min(1,(date-vS)/(vE-vS)));
+  return d.LEFT_W+ratio*chartW;
+}
+
+function layoutPills(company, models, W, d, ctx){
+  const sorted=[...models].sort((a,b)=>parseDate(a.d)-parseDate(b.d));
+  const pills=[];
+  const levels=[0,-1,1];
+  const lastRight=new Map(levels.map(level=>[level,-Infinity]));
+  ctx.font=`700 ${d.PILL_FS}px 'Inter',sans-serif`;
+  sorted.forEach(model=>{
+    const cx=xOf(parseDate(model.d),W,d);
+    const tw=ctx.measureText(model.n).width;
+    const pw=tw+d.PILL_PAD*2;
+    const left=cx-pw/2;
+    const right=cx+pw/2;
+    if(left<d.LEFT_W+2 || right>W-d.RIGHT_PAD) { pills.push({model,cx,pw,tw,visible:false}); return; }
+    let chosen=null;
+    for(const level of levels){
+      if(left >= lastRight.get(level)+d.PILL_GAP){
+        chosen=level;
+        break;
+      }
+    }
+    if(chosen===null){
+      pills.push({model,cx,pw,tw,visible:false,level:0});
+    } else {
+      pills.push({model,cx,pw,tw,visible:true,level:chosen});
+      lastRight.set(chosen,right);
+    }
+  });
+  return pills;
+}
+
+function drawStickyLabels(ctx, area, cos, numClosed, H, d, LANE, DOT_Y, sectGap, sTop, fS){
+  const viewX=area.scrollLeft||0;
+  const railW=d.LEFT_W+12;
+
+  ctx.save();
+  ctx.fillStyle='#FCFBF7';
+  ctx.fillRect(viewX,d.HEADER_H,railW,H-d.HEADER_H);
+  ctx.strokeStyle='rgba(20,20,20,0.13)';
+  ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(viewX+railW,d.HEADER_H); ctx.lineTo(viewX+railW,H); ctx.stroke();
+
+  if(currentFilter!=='open'){
+    const y0=sTop(0), y1=sTop(numClosed);
+    ctx.fillStyle='rgba(245,158,11,0.9)';
+    ctx.fillRect(viewX,y0,4,y1-y0);
+    ctx.fillStyle='rgba(180,100,0,0.58)';
+    ctx.font=fS(7.5,'700'); ctx.textAlign='left';
+    ctx.fillText('KAPALI KAYNAK',viewX+12,y0+12);
+  }
+  if(currentFilter!=='closed'){
+    const si=currentFilter==='all'?numClosed:0;
+    const y0=sTop(si), y1=H-2;
+    ctx.fillStyle='rgba(34,197,94,0.86)';
+    ctx.fillRect(viewX,y0,4,y1-y0);
+    ctx.fillStyle='rgba(10,100,40,0.58)';
+    ctx.font=fS(7.5,'700'); ctx.textAlign='left';
+    ctx.fillText('AÇIK KAYNAK',viewX+12,y0+12);
+  }
+  if(currentFilter==='all'){
+    const divY=sTop(numClosed)-sectGap/2;
+    ctx.strokeStyle='rgba(0,0,0,0.08)';
+    ctx.beginPath(); ctx.moveTo(viewX,divY); ctx.lineTo(viewX+railW,divY); ctx.stroke();
+  }
+
+  cos.forEach((company,i)=>{
+    const top=sTop(i), dotY=top+DOT_Y, col=COL[company]||'#525252';
+    const ph=Math.min(22,LANE*0.48), pw=d.LEFT_W-8;
+
+    ctx.fillStyle=col+'1f';
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(viewX+4,dotY-ph/2,pw,ph,6);
+    else ctx.rect(viewX+4,dotY-ph/2,pw,ph);
+    ctx.fill();
+
+    ctx.strokeStyle=col+'66'; ctx.lineWidth=1;
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(viewX+4,dotY-ph/2,pw,ph,6);
+    else ctx.rect(viewX+4,dotY-ph/2,pw,ph);
+    ctx.stroke();
+
+    const cfs=Math.min(10,Math.max(8,LANE*0.16));
+    ctx.fillStyle=col; ctx.font=`700 ${cfs}px 'Inter',sans-serif`; ctx.textAlign='right';
+    ctx.fillText(company,viewX+d.LEFT_W-10,dotY+cfs*0.35);
+  });
+  ctx.restore();
+}
+
+function draw(){
+  const area=document.getElementById('chartArea');
+  const canvas=document.getElementById('chart-canvas');
+  const dpr=Math.min(Math.max(window.devicePixelRatio||1,2),3);
+  const cos=getCompanies();
+  const vis=getVisible(cos);
+  const numClosed=currentFilter==='all'?CLOSED.length:(currentFilter==='closed'?cos.length:0);
+  const minW=currentYear==='all'?1680:1180;
+  const densityW=currentYear==='all'?vis.length*24:vis.length*38;
+  const W=Math.ceil(Math.max(area.clientWidth,minW,Math.min(2600,densityW)));
+  const d=getDims(W);
+  const sectGap=currentFilter==='all'?d.SECT_GAP:0;
+  const LANE=d.LANE_H;
+  const DOT_Y=Math.floor(LANE/2);
+  const H=d.HEADER_H+cos.length*LANE+sectGap+4;
+
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+
+  // Canvas background
+  ctx.fillStyle='#FCFBF7';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.fillRect(0,0,W,d.HEADER_H);
+
+  function sTop(i){ return d.HEADER_H+i*LANE+(i>=numClosed?sectGap:0); }
+  const sc=d.sc;
+  const fS=(px,w='700')=>`${w} ${Math.max(7,Math.round(px*sc))}px 'Inter Tight',sans-serif`;
+  const fM=(px,w='500')=>`${w} ${Math.max(6,Math.round(px*sc))}px 'JetBrains Mono',monospace`;
+
+  // Section BG
+  if(currentFilter!=='open'){
+    const y0=sTop(0),y1=sTop(numClosed);
+    ctx.fillStyle='rgba(245,158,11,0.055)'; ctx.fillRect(0,y0,W,y1-y0);
+    ctx.fillStyle='rgba(245,158,11,0.85)'; ctx.fillRect(0,y0,4,y1-y0);
+  }
+  if(currentFilter!=='closed'){
+    const si=currentFilter==='all'?numClosed:0;
+    const y0=sTop(si),y1=H-2;
+    ctx.fillStyle='rgba(34,197,94,0.055)'; ctx.fillRect(0,y0,W,y1-y0);
+    ctx.fillStyle='rgba(34,197,94,0.82)'; ctx.fillRect(0,y0,4,y1-y0);
+  }
+  if(currentFilter==='all'){
+    const divY=sTop(numClosed)-sectGap/2;
+    ctx.strokeStyle='rgba(0,0,0,0.08)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,divY); ctx.lineTo(W,divY); ctx.stroke();
+  }
+
+  // Zaman ekseni
+  const [vS,vE]=getViewRange();
+  const spanDays=(vE-vS)/86400000;
+  const MO_TR=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+
+  if(spanDays>800){
+    for(let y=2022;y<=2026;y++){
+      for(let mo=0;mo<12;mo+=3){
+        const dt=new Date(y,mo,1);
+        if(dt<vS||dt>vE) continue;
+        const x=xOf(dt,W,d);
+        if(x<d.LEFT_W||x>W-d.RIGHT_PAD) continue;
+        const isYear=mo===0;
+        ctx.strokeStyle=isYear?'rgba(0,0,0,0.18)':'rgba(0,0,0,0.07)';
+        ctx.lineWidth=isYear?1:0.5;
+        ctx.beginPath(); ctx.moveTo(x,d.HEADER_H); ctx.lineTo(x,H-2); ctx.stroke();
+        ctx.fillStyle=isYear?'#8B5CF6':'rgba(80,80,80,0.6)';
+        ctx.font=isYear?fS(9,'800'):fM(7,'400'); ctx.textAlign='center';
+        ctx.fillText(isYear?String(y):MO_TR[mo],x,d.HEADER_H-9*sc);
+        if(!isYear){
+          ctx.fillStyle='rgba(80,80,80,0.4)'; ctx.font=fM(6.5,'400');
+          ctx.fillText(String(y),x,d.HEADER_H-18*sc);
+        }
+      }
+    }
+  } else {
+    for(let y=vS.getFullYear();y<=vE.getFullYear();y++){
+      for(let mo=0;mo<12;mo++){
+        const dt=new Date(y,mo,1); if(dt<vS||dt>=vE) continue;
+        const x=xOf(dt,W,d); if(x<d.LEFT_W||x>W-d.RIGHT_PAD) continue;
+        const isJan=mo===0;
+        ctx.strokeStyle=isJan?'rgba(139,92,246,0.5)':'rgba(0,0,0,0.08)';
+        ctx.lineWidth=isJan?1.5:0.5;
+        ctx.beginPath(); ctx.moveTo(x,d.HEADER_H); ctx.lineTo(x,H-2); ctx.stroke();
+        const nx=xOf(new Date(y,mo+1,1),W,d);
+        const cx=(x+Math.min(nx,W-d.RIGHT_PAD))/2;
+        ctx.fillStyle=isJan?'#8B5CF6':'rgba(60,60,60,0.7)';
+        ctx.font=isJan?fS(9,'800'):fM(7.5,'400'); ctx.textAlign='center';
+        ctx.fillText(isJan?String(y):MO_TR[mo],cx,d.HEADER_H-7*sc);
+      }
+    }
+  }
+
+  // Company rows + PILL rendering
+  const allPillData=[];
+
+  cos.forEach((company,i)=>{
+    const top=sTop(i), dotY=top+DOT_Y, col=COL[company]||'#525252';
+
+    if(i%2===0){ ctx.fillStyle='rgba(0,0,0,0.018)'; ctx.fillRect(0,top,W,LANE); }
+    ctx.strokeStyle='rgba(20,20,20,0.045)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,top+0.5); ctx.lineTo(W,top+0.5); ctx.stroke();
+
+    // Dashed line
+    ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=0.8;
+    ctx.setLineDash([3*sc,3*sc]);
+    ctx.beginPath(); ctx.moveTo(d.LEFT_W,dotY); ctx.lineTo(W-d.RIGHT_PAD,dotY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Company label
+    const ph=Math.min(22,LANE*0.48), pw=d.LEFT_W-8;
+    ctx.fillStyle=col+'1f';
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(4,dotY-ph/2,pw,ph,6);
+    else ctx.rect(4,dotY-ph/2,pw,ph);
+    ctx.fill();
+    ctx.strokeStyle=col+'66'; ctx.lineWidth=1;
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(4,dotY-ph/2,pw,ph,6);
+    else ctx.rect(4,dotY-ph/2,pw,ph);
+    ctx.stroke();
+    const cfs=Math.min(10,Math.max(8,LANE*0.16));
+    ctx.fillStyle=col; ctx.font=`700 ${cfs}px 'Inter',sans-serif`; ctx.textAlign='right';
+    ctx.fillText(company,d.LEFT_W-10,dotY+cfs*0.35);
+
+    // Pills
+    const coModels=vis.filter(m=>m.c===company);
+    const pills=layoutPills(company,coModels,W,d,ctx);
+    const pillH=Math.min(d.PILL_H,LANE*0.35);
+    const pillR=Math.min(d.PILL_R,pillH/2);
+    const levelStep=Math.min(pillH*0.95,(LANE-pillH)/2-2);
+
+    pills.forEach(p=>{
+      const {model,cx,pw: pw2,tw,visible,level}=p;
+      const pillY=dotY+(level||0)*levelStep;
+      allPillData.push({model,cx,py:pillY,dotY,visible});
+
+      if(!visible){
+        ctx.fillStyle=col+'52';
+        ctx.beginPath(); ctx.arc(cx,dotY,2.2,0,Math.PI*2); ctx.fill();
+        return;
+      }
+
+      const isN=!!model.x;
+
+      // axis anchor + connector
+      ctx.strokeStyle=col+'66'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(cx,dotY); ctx.lineTo(cx,pillY); ctx.stroke();
+      ctx.fillStyle=col+'85';
+      ctx.beginPath(); ctx.arc(cx,dotY,d.DOT_R,0,Math.PI*2); ctx.fill();
+
+      // pill bg
+      const pLeft=cx-pw2/2, pTop=pillY-pillH/2;
+      ctx.shadowColor='rgba(0,0,0,0.12)';
+      ctx.shadowBlur=2;
+      ctx.shadowOffsetY=1;
+      ctx.fillStyle=col+'26';
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(pLeft,pTop,pw2,pillH,pillR);
+      else ctx.rect(pLeft,pTop,pw2,pillH);
+      ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.shadowOffsetY=0;
+
+      // pill border
+      ctx.strokeStyle=col+'88'; ctx.lineWidth=1.15;
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(pLeft,pTop,pw2,pillH,pillR);
+      else ctx.rect(pLeft,pTop,pw2,pillH);
+      ctx.stroke();
+
+      // 2026 highlight
+      if(isN){
+        ctx.shadowColor=col; ctx.shadowBlur=6;
+        ctx.fillStyle=col+'18';
+        ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(pLeft,pTop,pw2,pillH,pillR);
+        else ctx.rect(pLeft,pTop,pw2,pillH);
+        ctx.fill();
+        ctx.shadowBlur=0;
+      }
+
+      // pill text
+      ctx.font=`700 ${d.PILL_FS}px 'Inter',sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='#111111';
+      ctx.fillText(model.n,cx,pillY+0.5);
+      ctx.textBaseline='alphabetic';
+    });
+  });
+
+  // TODAY marker
+  const now=new Date();
+  const [vs2,ve2]=getViewRange();
+  if(now>=vs2&&now<=ve2){
+    const nx=xOf(now,W,d);
+    if(nx>=d.LEFT_W&&nx<=W-d.RIGHT_PAD){
+      ctx.strokeStyle='rgba(139,92,246,0.8)'; ctx.lineWidth=1.5; ctx.setLineDash([3*sc,3*sc]);
+      ctx.beginPath(); ctx.moveTo(nx,d.HEADER_H); ctx.lineTo(nx,H-2); ctx.stroke(); ctx.setLineDash([]);
+      // today pill
+      const tLabel='BUGÜN';
+      ctx.font=fM(7,'600'); const tlw=ctx.measureText(tLabel).width;
+      const tpw=tlw+8*sc, tph=13*sc;
+      ctx.fillStyle='#8B5CF6';
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(nx-tpw/2,d.HEADER_H-tph-3*sc,tpw,tph,2*sc);
+      else ctx.rect(nx-tpw/2,d.HEADER_H-tph-3*sc,tpw,tph);
+      ctx.fill();
+      ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(tLabel,nx,d.HEADER_H-tph/2-3*sc);
+      ctx.textBaseline='alphabetic';
+    }
+  }
+
+  drawStickyLabels(ctx,area,cos,numClosed,H,d,LANE,DOT_Y,sectGap,sTop,fS);
+
+  canvas._meta={cos,numClosed,W,H,sectGap,vis,d,LANE,DOT_Y,allPillData};
+}
+
+// Tooltip
+const tt=document.getElementById('tt'), canvas=document.getElementById('chart-canvas');
+canvas.addEventListener('mousemove',function(e){
+  const meta=this._meta; if(!meta) return;
+  const rect=this.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  let best=null, bestD=28;
+  (meta.allPillData||[]).forEach(p=>{
+    const hitY=p.py||p.dotY;
+    const dist=Math.hypot(mx-p.cx,my-hitY);
+    if(dist<bestD){bestD=dist;best=p.model;}
+  });
+  if(best){
+    const col=COL[best.c]||'#525252';
+    const tl=best.t==='open'
+      ? '<span class="tt-badge" style="background:#D1FAE5;color:#059669;">AÇIK</span>'
+      : '<span class="tt-badge" style="background:#FEF3C7;color:#D97706;">KAPALI</span>';
+    const fl=best.x?'<span class="tt-badge" style="background:#EDE9FE;color:#7C3AED;">2026</span>':'';
+    tt.innerHTML=`<strong style="color:${col}">${best.c} · ${best.n}</strong><em>${tl}${fl} ${best.d}</em>${best.note?`<span class="tt-note">${best.note}</span>`:''}`;
+    tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-6)+'px';
+    tt.classList.add('show');
+  } else { tt.classList.remove('show'); }
+});
+canvas.addEventListener('mouseleave',()=>tt.classList.remove('show'));
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.src-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); draw();
+}
+function setYear(y,btn){
+  currentYear=y;
+  document.querySelectorAll('.yr-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); draw();
+}
+
+// DIVIDER drag
+
+// TIMELINE
+const SLIDES=[
+  {file:'../1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html', year:'B1', label:'Bölüm 1', cover:true},
+  {file:'16-bolum2-kapak.html', year:'B2', label:'Kap.', cover:true},
+  {file:'17-model-haritasi.html', year:'Hrt', label:'Harita'},
+  {file:'18-leaderboard.html', year:'Sır', label:'Sıralama'},
+  {file:'20-araclar.html', year:'Araç', label:'Araçlar'},
+  {file:'21-bagiam-prompt.html', year:'Prmt', label:'Prompt'},
+  {file:'22-ekip-arkadasi.html', year:'Bilgi', label:'Bilgi Çöküşü'},
+];
+(function(){
+  const cur='17-model-haritasi.html';
+  let vis=[]; try{vis=JSON.parse(localStorage.getItem('visited')||'[]');}catch(e){}
+  if(!vis.includes(cur))vis.push(cur);
+  try{localStorage.setItem('visited',JSON.stringify(vis));}catch(e){}
+  const items=document.getElementById('htlItems');
+  let activeIdx=0;
+  SLIDES.forEach((s,i)=>{
+    const isActive=s.file===cur;
+    if(isActive) activeIdx=i;
+    const isVisited=vis.includes(s.file)&&!isActive;
+    const el=document.createElement('div');
+    el.className='htl-item'+(isActive?' active':'')+(isVisited?' visited':'')+(s.cover?' cover':'');
+    el.innerHTML=`<div class="htl-year">${s.year||''}</div><div class="htl-dot"></div><span class="htl-tip">${s.label}</span>`+(isActive?`<div class="you-are-here">▲ Buradasın</div>`:'');
+    el.onclick=()=>{window.location.href=s.file;};
+    items.appendChild(el);
+  });
+  document.getElementById('prog').textContent=activeIdx+1;
+  setTimeout(()=>{
+    const fill=document.getElementById('htlFill');
+    if(fill) fill.style.width=((activeIdx+0.5)/SLIDES.length*100)+'%';
+  },200);
+})();
+
+function toggleFS(){
+  if(window.parent!==window){window.parent.postMessage({action:'toggleFS'},'*'); return;}
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') window.location.href='18-leaderboard.html';
+  if(e.key==='ArrowLeft')  window.location.href='16-bolum2-kapak.html';
+});
+window.addEventListener('load',()=>{
+  draw();
+  if(document.fonts) document.fonts.ready.then(draw);
+});
+window.addEventListener('resize', draw);
+let scrollDrawQueued=false;
+document.getElementById('chartArea').addEventListener('scroll',()=>{
+  if(scrollDrawQueued) return;
+  scrollDrawQueued=true;
+  requestAnimationFrame(()=>{
+    scrollDrawQueued=false;
+    draw();
+  });
+},{passive:true});
+</script>
+<script src="assets/chapter2-divider.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

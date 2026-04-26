@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>06 · Gözetimsiz Öğrenme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#FF6B35; --blue:#1E3A8A; }
+
+.usecase {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 22px 24px;
+  display: flex; gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.usecase .ico {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--paper);
+}
+.usecase .ico svg { width: 22px; height: 22px; }
+.usecase h3 {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.usecase p { font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
+.usecase p strong { font-weight: 600; color: var(--ink); }
+
+/* Right viz */
+.viz-stage.cluster {
+  width: min(620px, 90%);
+  aspect-ratio: 1.1/1;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.viz-stage.cluster::before, .viz-stage.cluster::after {
+  content: ""; position: absolute; background: var(--line-soft);
+}
+.viz-stage.cluster::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+.viz-stage.cluster::after { top: 50%; left: 0; right: 0; height: 1px; }
+
+.axis {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.axis.x { bottom: 8px; right: 12px; }
+.axis.y { top: 12px; left: 12px; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+.node {
+  position: absolute;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 1.5px solid var(--ink);
+  transform: translate(-50%, -50%);
+  transition: all 1.4s cubic-bezier(.6,.05,.2,1);
+  z-index: 2;
+}
+.node.c1 { background: var(--accent); }
+.node.c2 { background: var(--blue); }
+.node.c3 { background: #FFD400; }
+
+.centroid {
+  position: absolute;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  opacity: 0;
+  transition: all 1s cubic-bezier(.6,.05,.2,1);
+}
+.centroid::before, .centroid::after { content:""; position:absolute; background: var(--ink); }
+.centroid::before { width: 24px; height: 2.5px; }
+.centroid::after  { width: 2.5px; height: 24px; }
+.centroid .ring { position:absolute; inset:-4px; border:1.5px solid var(--ink); border-radius:50%; background: var(--paper); }
+
+.controls {
+  margin-top: 32px;
+  display: flex; gap: 12px; align-items: center;
+}
+.btn {
+  padding: 14px 26px;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: 0.15s;
+}
+.btn:hover { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+.btn.ghost { background: var(--paper); color: var(--ink); }
+.btn.ghost:hover { background: var(--ink); color: var(--paper); }
+.btn svg { width: 14px; height: 14px; }
+.step-indicator {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.step-indicator b { color: var(--ink); font-weight: 600; }
+
+.legend {
+  position: absolute;
+  bottom: 32px; left: 32px;
+  display: flex; gap: 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  z-index: 5;
+}
+.legend .item { display: flex; align-items: center; gap: 8px; }
+.legend .sw { width: 12px; height: 12px; border: 1.5px solid var(--ink); }
+.legend .sw.k1 { background: var(--accent); }
+.legend .sw.k2 { background: var(--blue); }
+.legend .sw.k3 { background: #FFD400; }
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">5</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">06</span>
+        <span>Gözetimsiz Öğrenme</span>
+        <span class="dash"></span>
+        <span>1980</span>
+      </div>
+      <h1 class="fadeUp d2">Cevap vermeden<br><span class="hl">deseni bul</span>.</h1>
+      <p class="lede fadeUp d3">
+        Makineye herhangi bir etiket sunulmaz; yalnızca ham veri verilir.
+        Algoritma, bu veri içindeki <strong>benzerlikleri ve örüntüleri</strong>
+        kendi başına keşfeder. Önceden tanımlanmış sınıflar olmadan, doğal
+        grupları ortaya çıkarır.
+      </p>
+      <div class="usecase fadeUp d4">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a3 3 0 0 0-2.5-2.96"/></svg></div>
+        <div>
+          <h3>Kullanım Alanları</h3>
+          <p><strong>Müşteri segmentasyonu</strong>, içerik öneri motorları (Netflix, Spotify), bankacılıkta dolandırıcılık tespiti ve genom kümelemesi bu yöntemle çalışır.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="06-gozetimli.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="08-pekistirmeli.html" class="primary">Pekiştirmeli<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">06 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right">
+    <div class="viz-head"><span class="dot"></span><span>K-Means · Canlı Simülasyon</span></div>
+
+    <div class="viz-stage cluster" id="stage">
+      <span class="axis x">Özellik · A</span>
+      <span class="axis y">Özellik · B</span>
+      <div class="centroid" id="cent1" style="left:50%;top:50%;"><span class="ring"></span></div>
+      <div class="centroid" id="cent2" style="left:50%;top:50%;"><span class="ring"></span></div>
+      <div class="centroid" id="cent3" style="left:50%;top:50%;"><span class="ring"></span></div>
+    </div>
+
+    <div class="legend">
+      <div class="item"><span class="sw k1"></span>Küme A</div>
+      <div class="item"><span class="sw k2"></span>Küme B</div>
+      <div class="item"><span class="sw k3"></span>Küme C</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="runClustering()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Kümeleri Oluştur</button>
+      <button class="btn ghost" onclick="resetClustering()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Sıfırla</button>
+      <div class="step-indicator">Adım <b id="step">0</b> / 3</div>
+    </div>
+  </section>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+const nodes = [];
+const SEED = (() => { let s = 42; return () => (s = (s*9301+49297) % 233280) / 233280; })();
+[{cx:25,cy:28,c:28},{cx:72,cy:28,c:30},{cx:50,cy:75,c:32}].forEach((b, gi) => {
+  for (let i=0; i<b.c; i++){
+    const r = SEED()*14, t = SEED()*Math.PI*2;
+    const x = b.cx + Math.cos(t)*r + (SEED()-0.5)*4;
+    const y = b.cy + Math.sin(t)*r + (SEED()-0.5)*4;
+    const el = document.createElement('div');
+    el.className = 'node';
+    el.style.left = (8 + SEED()*84) + '%';
+    el.style.top  = (8 + SEED()*84) + '%';
+    stage.appendChild(el);
+    nodes.push({ el, x, y, group: gi });
+  }
+});
+
+let runStep = 0;
+function setStep(n){ runStep = n; document.getElementById('step').textContent = n; }
+
+function runClustering(){
+  if (runStep === 0){
+    nodes.forEach(n => { n.el.style.left = n.x+'%'; n.el.style.top = n.y+'%'; });
+    setStep(1);
+  } else if (runStep === 1){
+    const [c1,c2,c3] = ['cent1','cent2','cent3'].map(id => document.getElementById(id));
+    [c1,c2,c3].forEach(c => c.style.opacity = '1');
+    setTimeout(() => {
+      c1.style.left='25%'; c1.style.top='28%';
+      c2.style.left='72%'; c2.style.top='28%';
+      c3.style.left='50%'; c3.style.top='75%';
+    }, 50);
+    setStep(2);
+  } else if (runStep === 2){
+    nodes.forEach(n => n.el.classList.add('c'+(n.group+1)));
+    setStep(3);
+  }
+}
+function resetClustering(){
+  nodes.forEach(n => {
+    n.el.classList.remove('c1','c2','c3');
+    n.el.style.left = (8 + SEED()*84) + '%';
+    n.el.style.top  = (8 + SEED()*84) + '%';
+  });
+  ['cent1','cent2','cent3'].forEach(id => {
+    const e = document.getElementById(id);
+    e.style.opacity = '0';
+    e.style.left = '50%'; e.style.top = '50%';
+  });
+  setStep(0);
+}
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '07-gozetimsiz.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '08-pekistirmeli.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '06-gozetimli.html';
+  if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); runClustering(); }
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

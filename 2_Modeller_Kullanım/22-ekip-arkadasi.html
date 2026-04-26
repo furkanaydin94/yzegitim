@@ -1,0 +1,495 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>22 · Knowledge Collapse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter2-theme.css">
+<style>
+:root { --accent: #F97316; --accent-soft: #FFF7ED; }
+
+/* Right scrollable */
+.right {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-soft) transparent;
+}
+.right::-webkit-scrollbar { width: 4px; }
+.right::-webkit-scrollbar-thumb { background: var(--line-soft); }
+
+/* Prevent flex compression — every direct child keeps its natural height */
+.right > * { flex-shrink: 0; }
+
+/* Hero (large bilingual title) */
+.hero-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 14px;
+}
+.hero-tr {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: clamp(28px, 3.2vw, 46px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.hero-en {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: clamp(22px, 2.5vw, 36px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+/* Thesis note box with big quote mark */
+.thesis-box {
+  border: 1.5px solid var(--ink);
+  background: var(--accent-soft);
+  padding: 18px 20px;
+  position: relative;
+}
+.thesis-box::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--accent);
+}
+.thesis-qmark {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 56px;
+  font-weight: 900;
+  color: rgba(249, 115, 22, 0.2);
+  line-height: 0.7;
+  margin-bottom: 8px;
+  display: block;
+}
+.thesis-box p {
+  font-size: 13px;
+  line-height: 1.72;
+  color: var(--ink-2);
+}
+.thesis-box p strong { color: var(--ink); font-weight: 700; }
+.thesis-attrib {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(249, 115, 22, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.thesis-name {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.thesis-name span { color: var(--muted); font-weight: 400; }
+.thesis-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  padding: 3px 9px;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+.thesis-link:hover { background: var(--accent); color: var(--paper); }
+
+/* Right panel heading */
+.right-head {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.right-head-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.right-head-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* Comparison table */
+.ct-wrap {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  overflow: visible;
+}
+.ct-header {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
+  background: var(--bg);
+  border-bottom: 1.5px solid var(--ink);
+}
+.ct-h {
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ct-h:not(:last-child) { border-right: 1px solid var(--line-soft); }
+.ct-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ct-row:last-child { border-bottom: none; }
+.ct-phase {
+  padding: 14px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--line-soft);
+  background: var(--bg);
+}
+.ct-phase-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.ct-phase-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.ct-phase-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.3;
+}
+.ct-row:nth-child(1) .ct-phase-dot { background: #60A5FA; }
+.ct-row:nth-child(1) .ct-phase-label { color: #2563EB; }
+.ct-row:nth-child(2) .ct-phase-dot { background: #A78BFA; }
+.ct-row:nth-child(2) .ct-phase-label { color: #7C3AED; }
+.ct-row:nth-child(3) .ct-phase-dot { background: var(--accent); }
+.ct-row:nth-child(3) .ct-phase-label { color: #C2410C; }
+
+.ct-cell {
+  padding: 13px 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  border-right: 1px solid var(--line-soft);
+}
+.ct-cell:last-child { border-right: none; }
+.ct-cell .cell-head {
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  display: block;
+  margin-bottom: 4px;
+}
+.ct-cell .cell-body {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.ct-cell.bad { background: #FEF2F2; }
+.ct-cell.bad .cell-head { color: #DC2626; }
+.ct-cell.good { background: #F0FDF4; }
+.ct-cell.good .cell-head { color: #16A34A; }
+
+/* Section separator */
+.section-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-sep span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.section-sep::before, .section-sep::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: var(--line-soft);
+}
+
+/* Hallucination cards */
+.hall-cards { display: flex; flex-direction: column; gap: 8px; }
+.hall-card {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hall-card-header { display: flex; align-items: center; gap: 8px; }
+.hall-card-icon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: var(--accent);
+}
+.hall-card-body {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.hall-card-body strong { color: var(--ink); font-weight: 700; }
+.hall-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  padding: 3px 9px;
+  letter-spacing: 0.04em;
+  width: fit-content;
+  transition: background 0.15s;
+}
+.hall-card-link:hover { background: var(--accent); color: var(--paper); }
+</style>
+</head>
+<body>
+
+<!-- TOP TIMELINE -->
+<nav class="htl" id="htl">
+  <div class="htl-label">Bölüm 2<b>K. Collapse</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">6</b> / 7</div>
+</nav>
+
+<div class="slide">
+
+  <!-- LEFT -->
+  <aside class="left fadeUp">
+    <div>
+      <div class="eyebrow d1">
+        <span class="num">22</span>
+        <span>Bölüm 2 · Bilgi Çöküşü</span>
+      </div>
+
+      <div class="hero-block fadeUp d2">
+        <div class="hero-tr">Bilgi Çöküşü</div>
+        <div class="hero-en">Knowledge Collapse</div>
+      </div>
+
+      <div class="thesis-box fadeUp d3" style="margin-top:18px;">
+        <span class="thesis-qmark">"</span>
+        <p>
+          AI problemi çözmenin ağırlığını taşırsa, insan düşünmek için gereken
+          <strong>kasını</strong> zamanla kaybeder. Yüksek doğruluklu kişiselleştirilmiş
+          tavsiyeler, insanların genel bilgi üretme motivasyonunu zayıflatır
+          ve toplum bir <strong>"bilgi çöküşü"</strong> durumuna kayabilir.
+        </p>
+        <div class="thesis-attrib">
+          <div class="thesis-name">
+            <strong>Daron Acemoglu</strong>
+            <span>, Dingwen Kong, Asuman Ozdaglar</span>
+          </div>
+          <a class="thesis-link"
+             href="https://economics.mit.edu/sites/default/files/2026-02/AI%2C%20Human%20Cognition%20and%20Knowledge%20Collapse%2002-20-26.pdf"
+             target="_blank">MIT Economics · PDF ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d4">
+      <div class="nav">
+        <a href="21-bagiam-prompt.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="20-araclar.html" class="primary">Modeller<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">22 / 22</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <!-- RIGHT -->
+  <section class="right">
+
+    <div class="right-head fadeUp d1">
+      <div class="right-head-title">Pasif mi, aktif mi? Zaman içinde fark açılıyor</div>
+      <div class="right-head-sub">İlk çıktıyı son saymamak, sorgulamak, yönlendirmek ve düzeltme döngüsüyle ilerlemek — farkı yaratan bu yaklaşım.</div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="ct-wrap fadeUp d2">
+      <div class="ct-header">
+        <div class="ct-h">Vade</div>
+        <div class="ct-h">😴 Pasif kullanıcı</div>
+        <div class="ct-h">🧠 Aktif kullanıcı</div>
+      </div>
+
+      <!-- Kısa vade -->
+      <div class="ct-row">
+        <div class="ct-phase">
+          <div class="ct-phase-inner">
+            <div class="ct-phase-dot"></div>
+            <div class="ct-phase-label">Kısa<br>vade</div>
+          </div>
+        </div>
+        <div class="ct-cell bad">
+          <span class="cell-head">Sor → al → yapıştır.</span>
+          <span class="cell-body">Çıktıyı sorgulamadan kullanır. Hızlı görünür ama öğrenme sıfır.</span>
+        </div>
+        <div class="ct-cell good">
+          <span class="cell-head">Sor → sorgula → yönlendir → düzelt.</span>
+          <span class="cell-body">Çıktının neden o şekilde geldiğini anlamaya çalışır. Prompt'u düzelterek ilerler.</span>
+        </div>
+      </div>
+
+      <!-- Orta vade -->
+      <div class="ct-row">
+        <div class="ct-phase">
+          <div class="ct-phase-inner">
+            <div class="ct-phase-dot"></div>
+            <div class="ct-phase-label">Orta<br>vade</div>
+          </div>
+        </div>
+        <div class="ct-cell bad">
+          <span class="cell-head">Doğrulama kapasitesi köreleşiyor.</span>
+          <span class="cell-body">Çıktının doğru mu yanlış mı olduğunu ayırt edemez hale geliyor. Her şeyi kabul ediyor.</span>
+        </div>
+        <div class="ct-cell good">
+          <span class="cell-head">Neyin güçlü, neyin zayıf olduğunu görüyor.</span>
+          <span class="cell-body">AI'nın nerede hata yaptığını, nerede güçlü olduğunu biliyor. Eleştirel okuma gelişiyor.</span>
+        </div>
+      </div>
+
+      <!-- Uzun vade -->
+      <div class="ct-row">
+        <div class="ct-phase">
+          <div class="ct-phase-inner">
+            <div class="ct-phase-dot"></div>
+            <div class="ct-phase-label">Uzun<br>vade</div>
+          </div>
+        </div>
+        <div class="ct-cell bad">
+          <span class="cell-head">Pasif uzun vade: AI olmadan düşünemez hale geliyor.</span>
+          <span class="cell-body">Eleştirel yargı zayıfladı. Acemoglu'nun tanımladığı "knowledge collapse" riski gerçekleşiyor.</span>
+        </div>
+        <div class="ct-cell good">
+          <span class="cell-head">AI ile çok daha karmaşık sorunları çözüyor.</span>
+          <span class="cell-body">Alan bilgisi + AI = kalıcı üretkenlik artışı. Düşünme kası güçleniyor, zayıflamıyor.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep fadeUp d3"><span>Gerçek vakalar</span></div>
+
+    <div class="hall-cards fadeUp d4">
+
+      <div class="hall-card">
+        <div class="hall-card-header">
+          <span class="hall-card-icon">⚖️ Hukuk</span>
+        </div>
+        <div class="hall-card-body">
+          Bir avukat, AI'ın uydurduğu dava kararlarını doğrulamadan mahkeme dilekçesine ekledi. Hakim sorduğunda sahte "doğrulama belgesi" de sunuldu; <strong>$5.000 para cezasına</strong> çarptırıldı. 2025 sonu itibarıyla dünya genelinde <strong>729 mahkeme dosyasında</strong> aynı hata tespit edildi.
+        </div>
+        <a class="hall-card-link" href="https://www.damiencharlotin.com/hallucinations/" target="_blank">Kaynak ↗</a>
+      </div>
+
+      <div class="hall-card">
+        <div class="hall-card-header">
+          <span class="hall-card-icon">🎓 Akademi</span>
+        </div>
+        <div class="hall-card-body">
+          NeurIPS 2025'e kabul edilen onlarca makalede sahte atıflar bulundu — büyük teknoloji şirketleri ve önde gelen üniversitelerin araştırmacıları dahil, kimse kaynaklara bakmamıştı; bazı makalelerde <strong>placeholder kaynak ID'leri</strong> olduğu gibi kalmıştı.
+        </div>
+        <a class="hall-card-link" href="https://fortune.com/2026/01/21/neurips-ai-conferences-research-papers-hallucinations/" target="_blank">Kaynak ↗</a>
+      </div>
+
+      <div class="hall-card">
+        <div class="hall-card-header">
+          <span class="hall-card-icon">🏛️ Kurumsal</span>
+        </div>
+        <div class="hall-card-body">
+          Bir danışmanlık şirketi Avustralya hükümetine sunduğu raporda gerçek akademisyenlerin adına atfedilmiş <strong>hiç yazılmamış kaynaklar</strong> kullandı. Şirket hatayı sessizce düzeltti ve son ödemeyi iade etti.
+        </div>
+        <a class="hall-card-link" href="https://fortune.com/2025/10/07/deloitte-ai-australia-government-report-hallucinations-technology-290000-refund/" target="_blank">Kaynak ↗</a>
+      </div>
+
+    </div>
+
+  </section>
+</div>
+
+<script>
+// TIMELINE
+const SLIDES = [
+  {file:'../1_Yapay_Zeka_Nasıl_Ogrenir/01-kapak.html', year:'B1', label:'Bölüm 1', cover:true},
+  {file:'16-bolum2-kapak.html', year:'B2', label:'Kap.', cover:true},
+  {file:'17-model-haritasi.html', year:'Hrt', label:'Harita'},
+  {file:'18-leaderboard.html', year:'Sır', label:'Sıralama'},
+  {file:'21-bagiam-prompt.html', year:'Prmt', label:'Prompt'},
+  {file:'22-ekip-arkadasi.html', year:'Bilgi', label:'Bilgi Çöküşü'},
+  {file:'20-araclar.html', year:'Araç', label:'Modeller'},
+];
+
+function toggleFS(){
+  if(window.parent!==window){window.parent.postMessage({action:'toggleFS'},'*'); return;}
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') window.location.href='20-araclar.html';
+  if(e.key==='ArrowLeft')  window.location.href='21-bagiam-prompt.html';
+});
+</script>
+<script src="assets/chapter2-divider.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

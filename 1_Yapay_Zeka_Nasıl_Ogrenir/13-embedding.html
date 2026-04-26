@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11 · Embedding & Word2Vec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#A855F7; --accent-soft:#F3E8FF; }
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">10</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">11</span>
+        <span>Embedding</span>
+        <span class="dash"></span>
+        <span>2013</span>
+      </div>
+      <h1 class="fadeUp d2">Kelimeleri<br><span class="hl">Sayıya Dökmek</span></h1>
+      <p class="lede fadeUp d3">
+        Bilgisayar metni anlayamaz; ama sayıları anlayabilir.
+        <strong>Embedding</strong>, her kelimeyi bir sayı listesine dönüştürür.
+        Bu sayede bilgisayar kelimelerin <strong>anlamını</strong> birer koordinat gibi görmeye başlar.
+      </p>
+
+      <div class="cards fadeUp d4">
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div>
+            <h3>Anlam Benzerliği</h3>
+            <p><strong>Benzer kelimeler birbirine yakın durur.</strong> "Kedi" ve "köpek" aynı bölgede, "buz" ve "demir" bambaşka bir bölgede. Sağdaki haritada bu kümeleri görebilirsin.</p>
+          </div>
+        </div>
+        <div class="card alt">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div>
+            <h3>Vektör Aritmetiği</h3>
+            <p><strong>Kral − Erkek + Kadın = Kraliçe.</strong> Kelimeler arasındaki anlam ilişkileri sayısal işlemlerle ifade edilebilir. Word2Vec bunu 2013'te gösterdi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="12-deeplearning.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="14-attention.html" class="primary">Attention<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">11 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right" style="padding:0;overflow:hidden;">
+    <div class="viz-head" style="position:absolute;top:32px;left:32px;z-index:5;"><span class="dot"></span><span>Vektör Uzayı — Kelime Anlam Haritası</span></div>
+    <svg width="100%" height="100%" viewBox="0 0 1300 650" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="greenGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="purpleGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="wordGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1"/>
+          <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:0.4"/>
+        </radialGradient>
+        <linearGradient id="pathClassic" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#a855f7"/>
+          <stop offset="100%" style="stop-color:#ef4444"/>
+        </linearGradient>
+        <linearGradient id="pathVector" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#a855f7"/>
+          <stop offset="100%" style="stop-color:#22c55e"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Arama Terimi -->
+      <g transform="translate(100,325)">
+        <rect x="-60" y="-30" width="120" height="60" rx="8" fill="rgba(168,85,247,0.15)" stroke="#a855f7" stroke-width="2" filter="url(#purpleGlow)"/>
+        <text x="0" y="8" fill="#a855f7" font-size="20" font-weight="700" text-anchor="middle" font-family="Inter Tight,sans-serif">"çocuk"</text>
+        <text x="0" y="-45" fill="#525252" font-size="12" text-anchor="middle" font-family="Inter,sans-serif">Arama Terimi</text>
+      </g>
+
+      <!-- Klasik aramaya yol -->
+      <path d="M 160 325 Q 260 325 300 120" stroke="url(#pathClassic)" stroke-width="3" fill="none" stroke-dasharray="8,4">
+        <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <!-- Vektöre yol -->
+      <path d="M 160 325 Q 260 325 300 500" stroke="url(#pathVector)" stroke-width="3" fill="none" stroke-dasharray="8,4">
+        <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <!-- Partiküller -->
+      <circle r="6" fill="#a855f7" filter="url(#purpleGlow)">
+        <animateMotion dur="2s" repeatCount="indefinite" path="M 160,325 Q 260,325 300,120"/>
+      </circle>
+      <circle r="6" fill="#22c55e" filter="url(#greenGlow)">
+        <animateMotion dur="2s" repeatCount="indefinite" path="M 160,325 Q 260,325 300,500"/>
+      </circle>
+
+      <!-- KLASİK ARAMA -->
+      <g transform="translate(300,100)">
+        <line x1="160" y1="20" x2="245" y2="20" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3">
+          <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="0.8s" repeatCount="indefinite"/>
+        </line>
+        <polygon points="245,15 260,20 245,25" fill="#ef4444"/>
+        <rect x="0" y="0" width="160" height="40" rx="6" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="20" y="25" fill="#ef4444" font-size="14" font-weight="600" font-family="Inter,sans-serif">🔍 Klasik Arama</text>
+        <g transform="translate(250,0)">
+          <rect x="0" y="0" width="200" height="36" rx="4" fill="rgba(34,197,94,0.1)" stroke="#22c55e" stroke-width="1">
+            <animate attributeName="opacity" values="1;0.7;1" dur="1.5s" repeatCount="indefinite"/>
+          </rect>
+          <text x="100" y="23" fill="#16a34a" font-size="13" text-anchor="middle" font-family="Inter,sans-serif">"<tspan font-weight="bold">çocuk</tspan> hakları"</text>
+          <circle cx="180" cy="18" r="9" fill="#22c55e"/>
+          <text x="180" y="22" fill="white" font-size="11" font-weight="bold" text-anchor="middle" font-family="Inter,sans-serif">✓</text>
+          <rect x="0" y="45" width="200" height="36" rx="4" fill="rgba(148,163,184,0.1)" stroke="#94a3b8" stroke-width="1"/>
+          <text x="100" y="68" fill="#64748b" font-size="13" text-anchor="middle" font-family="Inter,sans-serif">"genç birey desteği"</text>
+          <circle cx="180" cy="63" r="9" fill="#ef4444"/>
+          <text x="180" y="67" fill="white" font-size="11" font-weight="bold" text-anchor="middle" font-family="Inter,sans-serif">✗</text>
+          <rect x="0" y="90" width="200" height="36" rx="4" fill="rgba(148,163,184,0.1)" stroke="#94a3b8" stroke-width="1"/>
+          <text x="100" y="113" fill="#64748b" font-size="13" text-anchor="middle" font-family="Inter,sans-serif">"küçük yaş grubu"</text>
+          <circle cx="180" cy="108" r="9" fill="#ef4444"/>
+          <text x="180" y="112" fill="white" font-size="11" font-weight="bold" text-anchor="middle" font-family="Inter,sans-serif">✗</text>
+        </g>
+      </g>
+
+      <!-- VEKTÖR EMBEDDING -->
+      <g transform="translate(300,480)">
+        <path d="M 170 20 Q 350 20 500 -140" stroke="#22c55e" stroke-width="2" stroke-dasharray="8,4" fill="none">
+          <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1s" repeatCount="indefinite"/>
+        </path>
+        <rect x="0" y="0" width="180" height="40" rx="6" fill="rgba(168,85,247,0.08)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="20" y="25" fill="#a855f7" font-size="14" font-weight="600" font-family="Inter,sans-serif">🧠 Vektör Embedding</text>
+        <g transform="translate(30,55)">
+          <text x="0" y="-5" fill="#525252" font-size="10" font-family="Inter,sans-serif">Kelime → Sayılar</text>
+          <rect x="0" y="5" width="130" height="40" rx="4" fill="rgba(168,85,247,0.08)" stroke="#a855f7" stroke-width="1"/>
+          <text x="65" y="28" fill="#a855f7" font-family="JetBrains Mono,monospace" font-size="11" font-weight="500" text-anchor="middle">[0.82, 0.15,</text>
+          <text x="65" y="39" fill="#a855f7" font-family="JetBrains Mono,monospace" font-size="11" font-weight="500" text-anchor="middle">-0.43, 0.91]</text>
+        </g>
+      </g>
+
+      <!-- VEKTÖR UZAYI GRAFİĞİ -->
+      <g transform="translate(800,100)">
+        <rect x="0" y="0" width="480" height="450" rx="12" fill="rgba(250,250,247,0.9)" stroke="#E5E4DE" stroke-width="1.5"/>
+        <text x="240" y="40" fill="#0A0A0A" font-size="16" font-weight="600" text-anchor="middle" font-family="Inter Tight,sans-serif">Vektör Uzayı (Anlam Haritası)</text>
+        <g transform="translate(240,240)">
+          <g stroke="#EFEEE8" stroke-width="0.8">
+            <line x1="-200" y1="-150" x2="-200" y2="180"/>
+            <line x1="-100" y1="-150" x2="-100" y2="180"/>
+            <line x1="100" y1="-150" x2="100" y2="180"/>
+            <line x1="200" y1="-150" x2="200" y2="180"/>
+            <line x1="-220" y1="-100" x2="220" y2="-100"/>
+            <line x1="-220" y1="100" x2="220" y2="100"/>
+          </g>
+          <line x1="-220" y1="0" x2="220" y2="0" stroke="#E5E4DE" stroke-width="1.5"/>
+          <line x1="0" y1="-150" x2="0" y2="180" stroke="#E5E4DE" stroke-width="1.5"/>
+          <text x="210" y="20" fill="#8A8A8A" font-size="12" font-family="Inter,sans-serif">X</text>
+          <text x="10" y="-140" fill="#8A8A8A" font-size="12" font-family="Inter,sans-serif">Y</text>
+          <circle cx="0" cy="0" r="80" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.5"/>
+          <circle cx="0" cy="0" r="150" fill="none" stroke="#a855f7" stroke-width="1" stroke-dasharray="6,3" opacity="0.3"/>
+          <line x1="0" y1="0" x2="70" y2="-80" stroke="#22c55e" stroke-width="2" opacity="0.6"/>
+          <line x1="0" y1="0" x2="110" y2="-30" stroke="#22c55e" stroke-width="2" opacity="0.6"/>
+          <line x1="0" y1="0" x2="60" y2="70" stroke="#22c55e" stroke-width="2" opacity="0.6"/>
+          <line x1="0" y1="0" x2="-120" y2="100" stroke="#E5E4DE" stroke-width="1" opacity="0.8"/>
+          <!-- Merkez: çocuk -->
+          <circle cx="0" cy="0" r="35" fill="url(#wordGlow)" filter="url(#purpleGlow)">
+            <animate attributeName="r" values="35;38;35" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <text x="0" y="8" fill="#FFFFFF" font-size="18" font-weight="800" text-anchor="middle" font-family="Inter Tight,sans-serif">çocuk</text>
+          <!-- genç -->
+          <circle cx="70" cy="-80" r="25" fill="#22c55e" filter="url(#greenGlow)">
+            <animate attributeName="r" values="25;28;25" dur="1.8s" repeatCount="indefinite"/>
+          </circle>
+          <text x="70" y="-75" fill="white" font-size="12" font-weight="700" text-anchor="middle" font-family="Inter Tight,sans-serif">genç</text>
+          <g transform="translate(100,-100)">
+            <rect x="0" y="0" width="54" height="28" rx="6" fill="#FFFFFF" stroke="#22c55e" stroke-width="1.5" filter="url(#greenGlow)"/>
+            <text x="27" y="19" fill="#16a34a" font-size="14" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono,monospace">94%</text>
+          </g>
+          <!-- küçük -->
+          <circle cx="110" cy="-30" r="22" fill="#22c55e" filter="url(#greenGlow)">
+            <animate attributeName="r" values="22;25;22" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+          <text x="110" y="-25" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter Tight,sans-serif">küçük</text>
+          <g transform="translate(140,-50)">
+            <rect x="0" y="0" width="54" height="28" rx="6" fill="#FFFFFF" stroke="#22c55e" stroke-width="1.5" filter="url(#greenGlow)"/>
+            <text x="27" y="19" fill="#16a34a" font-size="14" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono,monospace">87%</text>
+          </g>
+          <!-- bebek -->
+          <circle cx="60" cy="70" r="20" fill="#22c55e" filter="url(#greenGlow)">
+            <animate attributeName="r" values="20;23;20" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <text x="60" y="74" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter Tight,sans-serif">bebek</text>
+          <g transform="translate(90,60)">
+            <rect x="0" y="0" width="54" height="28" rx="6" fill="#FFFFFF" stroke="#22c55e" stroke-width="1.5" filter="url(#greenGlow)"/>
+            <text x="27" y="19" fill="#16a34a" font-size="14" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono,monospace">79%</text>
+          </g>
+          <!-- finans (uzak) -->
+          <g transform="translate(-120,100)">
+            <circle cx="0" cy="0" r="16" fill="#E5E4DE"/>
+            <text x="0" y="5" fill="#525252" font-size="12" text-anchor="middle">💰</text>
+            <text x="0" y="28" fill="#8A8A8A" font-size="12" text-anchor="middle" font-family="Inter,sans-serif">finans</text>
+            <text x="25" y="5" fill="#8A8A8A" font-size="12" font-family="Inter,sans-serif">12%</text>
+          </g>
+        </g>
+        <!-- Lejant -->
+        <g transform="translate(320,420)">
+          <circle cx="0" cy="0" r="6" fill="#22c55e"/>
+          <text x="15" y="4" fill="#525252" font-size="11" font-family="Inter,sans-serif">Yüksek</text>
+          <circle cx="65" cy="0" r="6" fill="#a855f7"/>
+          <text x="80" y="4" fill="#525252" font-size="11" font-family="Inter,sans-serif">Orta</text>
+          <circle cx="120" cy="0" r="6" fill="#E5E4DE"/>
+          <text x="135" y="4" fill="#525252" font-size="11" font-family="Inter,sans-serif">Düşük</text>
+        </g>
+      </g>
+    </svg>
+  </section>
+</div>
+
+<script>
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '13-embedding.html';
+
+function toggleFS(){
+  if (window.parent !== window){ window.parent.postMessage({ action:'toggleFS' }, '*'); return; }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') window.location.href = '14-attention.html';
+  if (e.key === 'ArrowLeft')  window.location.href = '12-deeplearning.html';
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>

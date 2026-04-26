@@ -1,0 +1,373 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>13 · LLM & Bugün</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/chapter1-theme.css">
+<style>
+:root { --accent:#F97316; --accent-soft:#FFF7ED; }
+
+/* Right panel overrides for the NN viz */
+.right.llm {
+  flex-direction: column;
+  padding: 56px 36px 36px;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.token-bar {
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 12px 18px;
+  flex-shrink: 0;
+}
+.tb-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--muted-2);
+  margin-bottom: 8px;
+}
+.tb-tokens { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 30px; }
+.tb-tok {
+  padding: 5px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--ink);
+  animation: popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+@keyframes popIn { from { opacity:0; transform:scale(0.7) } to { opacity:1; transform:scale(1) } }
+.tb-tok.base { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.tb-tok.gen  { background: #ECFDF5; color: #059669; border-color: #10b981; }
+
+.nn-area { flex: 1; min-height: 0; position: relative; }
+.nn-svg  { width: 100%; height: 100%; }
+
+.layers-row {
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.layer-lbl {
+  flex: 1; border: 1.5px solid var(--line-soft);
+  background: var(--paper);
+  padding: 10px;
+  cursor: pointer; transition: all 0.35s;
+  opacity: 0.45;
+}
+.layer-lbl.lit {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ll-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px; font-weight: 700; color: var(--accent);
+}
+.ll-name {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 700; color: var(--ink);
+  margin-top: 2px; letter-spacing: 0.04em;
+}
+.ll-sub { font-size: 10px; color: var(--muted-2); margin-top: 2px; }
+
+.output-bar {
+  flex-shrink: 0;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  padding: 12px 20px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--muted-2);
+  transition: all 0.4s;
+}
+.output-bar.lit { border-color: #10b981; color: #059669; background: #ECFDF5; }
+
+.gen-btn {
+  align-self: center; flex-shrink: 0;
+  padding: 12px 28px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink); color: var(--paper);
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.gen-btn:hover { background: var(--accent); border-color: var(--accent); }
+.gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gen-btn svg { width: 14px; height: 14px; }
+</style>
+</head>
+
+<body>
+
+<aside class="htl">
+  <div class="htl-label">Kronoloji<b>1943 — 2022</b></div>
+  <div class="htl-track">
+    <div class="htl-line"><div class="htl-line-fill" id="htlFill"></div></div>
+    <div class="htl-items" id="htlItems"></div>
+  </div>
+  <div class="htl-progress"><b id="prog">12</b> / 14</div>
+</aside>
+
+<div class="slide">
+  <aside class="left" id="leftPanel">
+    <div>
+      <div class="eyebrow fadeUp d1">
+        <span class="num">13</span>
+        <span>LLM &amp; Bugün</span>
+        <span class="dash"></span>
+        <span>2022</span>
+      </div>
+      <h1 class="fadeUp d2">Yapay Zeka<br><span class="hl">Nasıl Konuşur?</span></h1>
+      <p class="lede fadeUp d3">
+        Modern modeller (LLM), öğrendiği her şeyi devasa bir olasılık havuzunda birleştirir.
+        Onlar için konuşmak, <strong>bir sonraki en mantıklı kelimeyi tahmin etme</strong> döngüsüdür.
+        Sağdaki animasyonda bu süreci adım adım görebilirsin.
+      </p>
+
+      <div class="cards fadeUp d4">
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+          <div>
+            <h3>Metin · Kod · Mantık</h3>
+            <p>Yazılı içerik üretimi, kod yazımı, karmaşık problem analizi ve verilerin özetlenmesi — hepsi aynı token tahmin mekanizmasıyla çalışır.</p>
+          </div>
+        </div>
+        <div class="card alt">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+          <div>
+            <h3>ChatGPT · Claude · Gemini</h3>
+            <p>Tüm büyük dil modelleri bu bölümde gördüğün yapı taşları üzerine inşa edilmiştir: Nöron → Backprop → Attention → Embedding → LLM.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot fadeUp d5">
+      <div class="nav">
+        <a href="14-attention.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Geri</a>
+        <a href="../2_Modeller_Kullanım/16-bolum2-kapak.html" class="primary">Bölüm 2<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+      <div class="pageno">13 / 14</div>
+    </div>
+  </aside>
+
+  <div class="divider" id="divider"></div>
+
+  <section class="right llm">
+    <div class="viz-head"><span class="dot"></span><span>Token Üretim Animasyonu — LLM İçinde Ne Oluyor?</span></div>
+
+    <div class="token-bar fadeUp d1">
+      <div class="tb-label">Transformer Girişi (Token Listesi)</div>
+      <div class="tb-tokens" id="tokenBar">
+        <span class="tb-tok base">Yapay</span>
+        <span class="tb-tok base">zeka</span>
+        <span class="tb-tok base">bugün</span>
+      </div>
+    </div>
+
+    <div class="nn-area">
+      <svg class="nn-svg" id="nnSvg" viewBox="0 0 900 340" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <linearGradient id="wg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#F97316;stop-opacity:0.15"/>
+            <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:0.15"/>
+          </linearGradient>
+          <radialGradient id="ng" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" style="stop-color:#F97316;stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#ea580c;stop-opacity:0.5"/>
+          </radialGradient>
+          <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#F97316"/>
+          </marker>
+        </defs>
+        <g id="wires" stroke="url(#wg)" stroke-width="1" fill="none" opacity="0.4"></g>
+        <g id="nodes"></g>
+        <path id="loopPath" d="M830,170 Q880,310 450,315 Q100,310 95,110"
+          stroke="#F97316" stroke-width="2" fill="none" opacity="0"
+          stroke-dasharray="8,5" marker-end="url(#arrowHead)"/>
+        <g id="particles" opacity="0"></g>
+      </svg>
+    </div>
+
+    <div class="layers-row fadeUp d2">
+      <div class="layer-lbl" id="L1"><div class="ll-n">1</div><div class="ll-name">Girdi</div><div class="ll-sub">Vektör</div></div>
+      <div class="layer-lbl" id="L2"><div class="ll-n">2</div><div class="ll-name">Bağlam</div><div class="ll-sub">Attention</div></div>
+      <div class="layer-lbl" id="L3"><div class="ll-n">3</div><div class="ll-name">Semantik</div><div class="ll-sub">Anlam</div></div>
+      <div class="layer-lbl" id="L4"><div class="ll-n">4</div><div class="ll-name">Seçim</div><div class="ll-sub">Tahmin</div></div>
+    </div>
+
+    <div class="output-bar fadeUp" id="outputBar">⏳ Animasyonu başlatın</div>
+
+    <button class="gen-btn fadeUp" id="genBtn" onclick="runPipeline()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Animasyonu Başlat
+    </button>
+  </section>
+</div>
+
+<script>
+/* ── SVG Init ── */
+const nodeCols = [
+  { x:95,  count:6 }, { x:290, count:5 },
+  { x:500, count:4 }, { x:700, count:3 }, { x:830, count:1 }
+];
+const svgNodes    = document.getElementById('nodes');
+const svgWires    = document.getElementById('wires');
+const svgParticles= document.getElementById('particles');
+
+function initSVG(){
+  nodeCols.forEach((col,cIdx) => {
+    for(let i=0;i<col.count;i++){
+      const y = col.count===1 ? 170 : 60+(i*(240/(col.count-1)));
+      const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      circle.setAttribute('cx',col.x); circle.setAttribute('cy',y);
+      circle.setAttribute('r', col.x===830 ? 14 : 8);
+      circle.setAttribute('fill','url(#ng)'); circle.setAttribute('filter','url(#glow)');
+      svgNodes.appendChild(circle);
+      if(cIdx===0){
+        const p = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        p.setAttribute('cx',col.x); p.setAttribute('cy',y);
+        p.setAttribute('r',4); p.setAttribute('fill','#fbbf24');
+        p.setAttribute('filter','url(#glow)'); p.id=`p-${i}`;
+        svgParticles.appendChild(p);
+      }
+    }
+  });
+  for(let c=0;c<nodeCols.length-1;c++){
+    const c1=nodeCols[c], c2=nodeCols[c+1];
+    for(let i=0;i<c1.count;i++){
+      const y1 = c1.count===1 ? 170 : 60+(i*(240/(c1.count-1)));
+      for(let j=0;j<c2.count;j++){
+        const y2 = c2.count===1 ? 170 : 60+(j*(240/(c2.count-1)));
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1',c1.x); line.setAttribute('y1',y1);
+        line.setAttribute('x2',c2.x); line.setAttribute('y2',y2);
+        svgWires.appendChild(line);
+      }
+    }
+  }
+}
+initSVG();
+
+/* ── Animation Engine ── */
+const baseTokens  = ['Yapay','zeka','bugün'];
+const predictions = ['çok','hızlı','öğreniyor','ve','dünyayı','değiştiriyor.'];
+let pipelineActive=false, turnCount=0;
+
+async function runTurn(idx){
+  if(!pipelineActive) return;
+  const outputBar = document.getElementById('outputBar');
+  outputBar.className='output-bar';
+  outputBar.textContent=`⚙️ Tur ${idx+1}: Kelime hesaplanıyor...`;
+  document.querySelectorAll('.layer-lbl').forEach(l => l.classList.remove('lit'));
+  svgParticles.setAttribute('opacity','1');
+
+  for(let layer=0;layer<4;layer++){
+    if(!pipelineActive) break;
+    document.getElementById(`L${layer+1}`).classList.add('lit');
+    const nextCol = nodeCols[layer+1];
+    for(let p=0;p<6;p++){
+      const pEl = document.getElementById(`p-${p}`);
+      if(!pEl) continue;
+      const targetY = nextCol.count===1 ? 170 : 60+((p%nextCol.count)*(240/(nextCol.count-1||1)));
+      pEl.style.transition='all 0.55s cubic-bezier(0.4,0,0.2,1)';
+      pEl.setAttribute('cx',nextCol.x); pEl.setAttribute('cy',targetY);
+    }
+    await new Promise(r => setTimeout(r,650));
+  }
+
+  const word = predictions[idx];
+  outputBar.classList.add('lit');
+  outputBar.innerHTML=`✅ Tahmin: <strong>"${word}"</strong>`;
+
+  const path = document.getElementById('loopPath');
+  path.style.opacity='1';
+  await new Promise(r => setTimeout(r,550));
+
+  const bar = document.getElementById('tokenBar');
+  const span = document.createElement('span');
+  span.className='tb-tok gen'; span.textContent=word;
+  bar.appendChild(span);
+
+  path.style.opacity='0';
+  svgParticles.setAttribute('opacity','0');
+  for(let p=0;p<6;p++){
+    const pEl = document.getElementById(`p-${p}`);
+    if(pEl){ pEl.style.transition='none'; pEl.setAttribute('cx',95); pEl.setAttribute('cy',60+(p*(240/5))); }
+  }
+
+  turnCount++;
+  if(turnCount<predictions.length && pipelineActive){
+    await new Promise(r => setTimeout(r,380));
+    await runTurn(turnCount);
+  } else {
+    pipelineActive=false;
+    document.getElementById('genBtn').disabled=false;
+    outputBar.innerHTML='✨ Cümle başarıyla tamamlandı!';
+  }
+}
+
+function runPipeline(){
+  if(pipelineActive) return;
+  pipelineActive=true; turnCount=0;
+  document.getElementById('genBtn').disabled=true;
+  const bar = document.getElementById('tokenBar');
+  bar.innerHTML='';
+  baseTokens.forEach(t => {
+    const s = document.createElement('span'); s.className='tb-tok base'; s.textContent=t;
+    bar.appendChild(s);
+  });
+  runTurn(0);
+}
+
+window.SLIDES = [
+  { file:'02-ai-ml-dl.html',       label:'AI · ML · DL',            year:'·'    },
+  { file:'03-noron.html',          label:'Nöron · McCulloch–Pitts', year:'1943' },
+  { file:'05-ml-turleri.html',     label:'ML Türleri',              year:'1980' },
+  { file:'06-gozetimli.html',      label:'Gözetimli Öğrenme',       year:'1980' },
+  { file:'07-gozetimsiz.html',     label:'Gözetimsiz Öğrenme',      year:'1980' },
+  { file:'08-pekistirmeli.html',   label:'Pekiştirmeli Öğrenme',    year:'1980' },
+  { file:'09-karar-agaclari.html', label:'Karar Ağaçları',          year:'1984' },
+  { file:'10-backprop.html',       label:'Backpropagation',         year:'1986' },
+  { file:'12-deeplearning.html',   label:'Derin Öğrenme',           year:'2012' },
+  { file:'13-embedding.html',      label:'Embedding',               year:'2013' },
+  { file:'14-attention.html',      label:'Attention',               year:'2017' },
+  { file:'15-llm.html',            label:'LLM · ChatGPT',           year:'2022' },
+  { file:'../2_Modeller_Kullanım/16-bolum2-kapak.html',   label:'Bölüm 2',                 cover:true  },
+  { file:'../3_Teknik_Kullanım/23-bolum3-kapak.html',   label:'Bölüm 3',                 cover:true  },
+];
+window.CURRENT = '15-llm.html';
+
+function toggleFS(){
+  if(window.parent!==window){ window.parent.postMessage({action:'toggleFS'},'*'); return; }
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight') window.location.href='../2_Modeller_Kullanım/16-bolum2-kapak.html';
+  if(e.key==='ArrowLeft')  window.location.href='14-attention.html';
+});
+
+</script>
+<script src="assets/chapter1-deck.js"></script>
+<script>
+/* Sağ tık → parent index'e forward */
+if (window.parent !== window) {
+  document.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    window.parent.postMessage({action:'iframeContextmenu', x:e.clientX, y:e.clientY}, '*');
+  });
+  document.addEventListener('click', function(){
+    window.parent.postMessage({action:'iframeClick'}, '*');
+  });
+}
+</script>
+</body>
+</html>
